@@ -1,0 +1,1035 @@
+---
+title: "Yield_Satellite"
+author: "Zhehan"
+date: "12/11/2020"
+output: html_document
+---
+
+#Package
+```{r}
+library(ggplot2)
+library(gridExtra)
+library(tidyr)
+library(dplyr)
+library(raster)
+library(sp)
+library(readxl)
+library(lubridate)
+library(caret)
+library(RColorBrewer)
+library(corrplot)
+library(imputeTS)
+library(caret)
+library(qdapRegex)
+library(signal)
+library(phenofit)
+library(TDPanalysis)
+```
+#Read commisioner yield data
+https://www.nass.usda.gov/Statistics_by_State/California/Publications/AgComm/index.php
+```{r}
+path_yield <- "D:/Tomato_Phenology_RemoteSensing/Historical_Yield_Raw"
+yield_2008_2019 <- read_excel(file.path(path_yield, "Processing Tomato Yield 2008-2019.xlsx"))
+head(yield_2008_2019)
+sum(is.na(yield_2008_2019)) #o NA
+names(yield_2008_2019) <- c("County","Year","TotalYield","Yield","Area")
+```
+
+#Read yield Data
+```{r}
+path_report <- "C:/Users/tangz/Box Sync/Tomato_Phenology_RemoteSensing/Historic_Yield_Data/Annual_Report"
+yield_county_report <- read_excel(file.path(path_report, "Processing Tomato Yield.xlsx"), sheet = 1, skip = 2)
+yield_county_report <- gather(yield_county_report, Year, Yield, '1999':'2019')
+head(yield_county_report)
+names(yield_county_report)[1] <- "County"
+
+ggplot(yield_county_report, aes(x  = Year, y = Yield, color = County)) + geom_point() + theme_bw()
+
+totyield_county_report <- read_excel(file.path(path_report, "Processing Tomato Yield.xlsx"), sheet = 2, skip = 2)
+totyield_county_report <- gather(totyield_county_report, Year, TotalYield, '1999':'2019')
+names(totyield_county_report)[1] <- "County"
+head(totyield_county_report)
+
+#combine 
+yield_county_report <- base::merge(totyield_county_report,yield_county_report,by = c("County","Year"))
+head(yield_county_report)
+
+#add area 
+yield_county_report$Area <- yield_county_report$TotalYield/yield_county_report$Yield
+
+#remove the outlier 
+yield_county_report <- subset(yield_county_report, Yield < 65)
+dim(yield_county_report) #237,5
+head(yield_county_report)  
+```
+##Compare two yield dataset
+```{r}
+yield_compare <- merge(yield_2008_2019, yield_county_report, by = c("Year","County"))
+dim(yield_compare)
+head(yield_compare) #136,8
+names(yield_compare) <- c("Year","County","TotalYield_NASS","Yield_NASS","Area_NASS","TotalYield_Report","Yield_Report","Area_Report")
+dim(yield_compare) #136,8
+dim(yield_2008_2019) #165,5
+dim(yield_county_report) #252,5
+
+ggplot(yield_compare, aes(x = TotalYield_NASS, y = TotalYield_Report)) + geom_point() + geom_abline(slope = 1, intercept = 0)
+ggplot(yield_compare, aes(x = Yield_NASS, y = Yield_Report)) + geom_point() + geom_abline(slope = 1, intercept = 0)
+ggplot(yield_compare, aes(x = Area_NASS, y = Area_Report)) + geom_point() + geom_abline(slope = 1, intercept = 0)
+View(yield_2008_2019)
+View(yield_county_report)
+
+years <- 2008:2019
+for(i in 1:12){
+  CA_counties_yield <- CA_counties
+  
+  CA_counties_yield <- subset(CA_counties_yield, NAME %in% subset(yield_2008_2019, Year==years[i])$County)
+  plot(CA_counties_yield)
+  CA_counties_yield@data <- merge(CA_counties@data[,c("NAME","INTPTLAT","INTPTLON")], subset(yield_2008_2019,Year==years[i]), by.x = "NAME", by.y = "County")
+  #sp_yield <- list("Yield",CA_counties_yield,  col = TRUE)
+  #spplot(CA_counties, "STATEFP", col = TRUE)
+  #sp::plot(CA_counties)
+  spplot(CA_counties_yield, "Yield", col = "transparent", col.regions = brewer.pal(n=9, name = "OrRd"), cuts = 7)
+  #spplot(CA_counties, "STATEFP", col = TRUE) 
+  
+  
+}
+spplot()
+```
+
+#Read field name
+```{r}
+#path_shp <- "C:/Users/tangz/Box Sync/Tomato_Phenology_RemoteSensing/Shapefiles"
+#path_fidbound <- "C:/Users/tangz/Box Sync/Tomato_Phenology_RemoteSensing/Shapefiles/tomato_fidbound"
+path_shp <- "D:/Tomato_Phenology_RemoteSensing/Shapefiles"
+
+ls_tomato_fidbound <- list()
+shp_list <- list.files(path_shp, pattern = "gee.shp", full.names = TRUE)
+for(i in 1:length(shp_list)){
+  ls_tomato_fidbound[[i]] <- shapefile(shp_list[i])
+}
+
+path_shp_box <- "C:/Users/tangz/Box Sync/Tomato_Phenology_RemoteSensing/Shapefiles"
+CA_counties <- shapefile(file.path(path_shp_box,"CA_Counties_TIGER2016.shp"))
+plot(CA_counties)
+ls_tomato_fidbound
+
+projection_tomato<- ls_tomato_fidbound[[1]]@proj4string
+
+CA_counties <- spTransform(CA_counties, projection_tomato)
+plot(CA_counties)
+plot(ls_tomato_fidbound[[1]], add = TRUE, col = "red", border = "transparent")
+
+```
+
+#Add field ID and center location
+```{r}
+for(i in 1:length(ls_tomato_fidbound)){
+  ls_tomato_fidbound[[i]]$ID <- 1:nrow(ls_tomato_fidbound[[i]])
+  ls_tomato_fidbound[[i]]$Year <- 2007+i
+  ls_tomato_fidbound[[i]]$ID_year <- paste(ls_tomato_fidbound[[i]]$Year, ls_tomato_fidbound[[i]]$ID, sep = "_")
+  ls_tomato_fidbound[[i]]$Longitude <- rgeos::gCentroid(ls_tomato_fidbound[[i]], byid = TRUE)@coords[,1]
+  ls_tomato_fidbound[[i]]$Latitude <- rgeos::gCentroid(ls_tomato_fidbound[[i]], byid = TRUE)@coords[,2]
+}
+
+names(ls_tomato_fidbound) <- paste("Year",2008:2019,sep = "_")
+
+```
+
+#Read GEE output
+##Landsat 5
+```{r}
+path_l5sr_ts <- "D:/Tomato_Phenology_RemoteSensing/GEE_output/Landsat5sr_ts"
+l5sr_ts_names <- list.files(path_l5sr_ts, full.names = TRUE, pattern = ".csv")
+l5sr_ts_names
+l5sr_ts_list <- list()
+
+read_l5sr_ts <- function(filenames){
+  ts <- read.csv(filenames)
+  names(ts)[4] <- "Date"
+  ts <- ts[,c("Area_acre","County","Date","mean")]
+  ts$Date <- as.character(ts$Date)
+  ts$Date <- as.Date(sapply(strsplit(ts$Date,split = "_"),'[',3),"%Y%m%d")
+  #remove NAs
+  ts <- na.omit(ts)
+  #if there are two values per date, average it 
+  ts <- aggregate(ts$mean, by = list("Date" = ts$Date,"Area_acre" = ts$Area_acre,"County" = ts$County), FUN = mean)
+  #add band name
+  names(ts)[4] <- "mean"
+  ts$Band <- unlist(ex_between(filenames, left = "L5_", right = "_20", extract = TRUE))
+  #scale the value 
+  if(unique(ts$Band) != "B6"){
+    ts$mean <- ts$mean * 0.0001
+  }
+  if(unique(ts$Band) == "B6"){
+    ts$mean <- ts$mean * 0.1
+  }
+  return(ts)
+}
+#Apply the function 
+for(i in 1:length(l5sr_ts_names)){
+  l5sr_ts_list[[i]] <- read_l5sr_ts(filenames = l5sr_ts_names[i])
+}
+head(l5sr_ts_list[[1]])
+dim(l5sr_ts_list[[1]])
+
+#change the list to df
+l5sr_ts_df <- do.call(rbind, l5sr_ts_list)
+dim(l5sr_ts_df) #7182747,5
+#convert long to wide 
+l5sr_ts_df <- spread(l5sr_ts_df, key = "Band",value = "mean")
+head(l5sr_ts_df)
+
+```
+###Calculate vis
+####Function
+```{r}
+ndvi_l57 <- function(df){
+  red <- df$B3
+  nir <- df$B4
+  NDVI <- (nir-red)/(nir+red)
+  return(NDVI)
+}
+evi_l57 <- function(df){
+  red <- df$B3
+  nir <- df$B4
+  blue <- df$B1
+  EVI <- 2.5*(nir-red)/(nir+6*red-7.5*blue+1)
+  return(EVI)
+}
+
+evi2_l57 <- function(df){
+  red <- df$B3
+  nir <- df$B4
+  EVI2 <- 2.4*(nir-red)/(nir+red+1)
+  return(EVI2)
+}
+
+wdrvi_l57 <- function(df){
+  nir <- df$B4
+  red <- df$B3
+  alpha <- 0.1
+  WDRVI <- (alpha*nir - red)/(alpha*nir + red)
+  return(WDRVI)
+}
+
+ndmi_l57 <- function(df){
+  nir <- df$B4
+  swir <- df$B5
+  NDMI <- (nir-swir)/(nir+swir)
+  return(NDMI)
+}
+
+addVIs_l57 <- function(df){
+  df$NDVI <- ndvi_l57(df)
+  df$EVI <- evi_l57(df)
+  df$EVI2 <- evi2_l57(df)
+  df$WDRVI <- wdrvi_l57(df)
+  df$NDMI <- ndmi_l57(df)
+  return(df)
+}
+```
+
+####Apply the function
+```{r}
+l5sr_ts_df <- addVIs_l57(l5sr_ts_df)
+head(l5sr_ts_df)
+```
+###Calculate vis 
+####Apply the function
+```{r}
+l7sr_ts_df <- addVIs_l57(l7sr_ts_df)
+head(l7sr_ts_df)
+```
+
+##Landsat 7
+```{r}
+path_l7sr_ts <- "D:/Tomato_Phenology_RemoteSensing/GEE_output/Landsat7sr_ts"
+l7sr_ts_names <- list.files(path_l7sr_ts, full.names = TRUE, pattern = ".csv")
+l7sr_ts_names
+l7sr_ts_list <- list()
+
+read_l7sr_ts <- function(filenames){
+  ts <- read.csv(filenames)
+  names(ts)[4] <- "Date"
+  ts <- ts[,c("Area_acre","County","Date","mean")]
+  ts$Date <- as.character(ts$Date)
+  ts$Date <- as.Date(sapply(strsplit(ts$Date,split = "_"),'[',3),"%Y%m%d")
+  #remove NAs
+  ts <- na.omit(ts)
+  #if there are two values per date, average it 
+  ts <- aggregate(ts$mean, by = list("Date" = ts$Date,"Area_acre" = ts$Area_acre,"County" = ts$County), FUN = mean)
+  #add band name
+  names(ts)[4] <- "mean"
+  ts$Band <- unlist(ex_between(filenames, left = "L7_", right = "_20", extract = TRUE))
+  #scale the value 
+  if(unique(ts$Band) != "B6"){
+    ts$mean <- ts$mean * 0.0001
+  }
+  if(unique(ts$Band) == "B6"){
+    ts$mean <- ts$mean * 0.1
+  }
+  return(ts)
+}
+#Apply the function 
+for(i in 1:length(l7sr_ts_names)){
+  l7sr_ts_list[[i]] <- read_l7sr_ts(filenames = l7sr_ts_names[i])
+}
+head(l7sr_ts_list[[1]])
+dim(l7sr_ts_list[[1]])
+
+#change the list to df
+l7sr_ts_df <- do.call(rbind, l7sr_ts_list)
+dim(l7sr_ts_df) #7182747,5
+#convert long to wide 
+l7sr_ts_df <- spread(l7sr_ts_df, key = "Band",value = "mean")
+head(l7sr_ts_df)
+
+
+```
+
+##Landsat 8
+```{r}
+path_l8sr_ts <- "D:/Tomato_Phenology_RemoteSensing/GEE_output/Landsat8sr_ts"
+l8sr_ts_names <- list.files(path_l8sr_ts, full.names = TRUE, pattern = ".csv")
+l8sr_ts_names
+l8sr_ts_list<- list()
+
+read_l8sr_ts <- function(filenames){
+  ts <- read.csv(filenames)
+  names(ts)[4] <- "Date"
+  ts <- ts[,c("Area_acre","County","Date","mean")]
+  ts$Date <- as.character(ts$Date)
+  ts$Date <- as.Date(sapply(strsplit(ts$Date,split = "_"),'[',3),"%Y%m%d")
+  #remove NAs
+  ts <- na.omit(ts)
+  #if there are two values per date, average it 
+  ts <- aggregate(ts$mean, by = list("Date" = ts$Date,"Area_acre" = ts$Area_acre,"County" = ts$County), FUN = mean)
+  #add band name
+  names(ts)[4] <- "mean"
+  ts$Band <- unlist(ex_between(filenames, left = "L8_", right = "_20", extract = TRUE))
+  #scale the value 
+  if(unique(ts$Band) != "B10" & unique(ts$Band) != "B11"){
+    ts$mean <- ts$mean * 0.0001
+  }
+  if(unique(ts$Band) == "B10" | unique(ts$Band) == "B11"){
+    ts$mean <- ts$mean * 0.1
+  }
+  return(ts)
+}
+
+#Apply the function 
+for(i in 1:length(l8sr_ts_names)){
+  l8sr_ts_list[[i]] <- read_l8sr_ts(filenames = l8sr_ts_names[i])
+}
+head(l8sr_ts_list[[1]])
+dim(l8sr_ts_list[[1]])
+
+#change the list to df
+l8sr_ts_df <- do.call(rbind, l8sr_ts_list)
+dim(l8sr_ts_df) #7182747,5
+#convert long to wide 
+l8sr_ts_df <- spread(l8sr_ts_df, key = "Band",value = "mean")
+head(l8sr_ts_df)
+
+
+```
+
+###Calculate vis
+####Function
+```{r}
+ndvi_l8 <- function(df){
+  red <- df$B4
+  nir <- df$B5
+  NDVI <- (nir-red)/(nir+red)
+  return(NDVI)
+}
+evi_l8 <- function(df){
+  red <- df$B4
+  nir <- df$B5
+  blue <- df$B2
+  EVI <- 2.5*(nir-red)/(nir+6*red-7.5*blue+1)
+  return(EVI)
+}
+
+evi2_l8 <- function(df){
+  red <- df$B4
+  nir <- df$B5
+  EVI2 <- 2.4*(nir-red)/(nir+red+1)
+  return(EVI2)
+}
+
+wdrvi_l8 <- function(df){
+  nir <- df$B5
+  red <- df$B4
+  alpha <- 0.1
+  WDRVI <- (alpha*nir - red)/(alpha*nir + red)
+  return(WDRVI)
+}
+
+ndmi_l8 <- function(df){
+  nir <- df$B5
+  swir <- df$B6
+  NDMI <- (nir-swir)/(nir+swir)
+  return(NDMI)
+}
+
+addVIs_l8 <- function(df){
+  df$NDVI <- ndvi_l8(df)
+  df$EVI <- evi_l8(df)
+  df$EVI2 <- evi2_l8(df)
+  df$WDRVI <- wdrvi_l8(df)
+  df$NDMI <- ndmi_l8(df)
+  return(df)
+}
+```
+
+####Apply the function
+```{r}
+l8sr_ts_df <- addVIs_l8(l8sr_ts_df)
+head(l8sr_ts_df)
+```
+
+#Merge l5,l7,l8 together 
+```{r}
+#Add Year
+l5sr_ts_df$Year <- lubridate::year(l5sr_ts_df$Date)
+l7sr_ts_df$Year <- lubridate::year(l7sr_ts_df$Date)
+l8sr_ts_df$Year <- lubridate::year(l8sr_ts_df$Date)
+#Add sensor name
+l5sr_ts_df$Sensor <- "L5"
+l7sr_ts_df$Sensor <- "L7"
+l8sr_ts_df$Sensor <- "L8"
+
+unique(l5sr_ts_df$Year) #2008-2011
+unique(l7sr_ts_df$Year) #2008-2019
+unique(l8sr_ts_df$Year) #2013-2019
+
+l578_ts_df <- rbind(l5sr_ts_df, l7sr_ts_df)
+names(l578_ts_df)[4:10] <- c("Blue","Green","Red","NIR","SWIR1","BT","SWIR2")
+
+l8sr_ts_df_new <- l8sr_ts_df[,c(1,2,3)]
+l8sr_ts_df_new$Blue <- l8sr_ts_df$B2
+l8sr_ts_df_new$Green <- l8sr_ts_df$B3
+l8sr_ts_df_new$Red <- l8sr_ts_df$B4
+l8sr_ts_df_new$NIR <- l8sr_ts_df$B5
+l8sr_ts_df_new$SWIR1 <- l8sr_ts_df$B6
+l8sr_ts_df_new$BT <- (l8sr_ts_df$B10+l8sr_ts_df$B11)/2
+l8sr_ts_df_new$SWIR2 <- l8sr_ts_df$B7
+l8sr_ts_df_new <- cbind(l8sr_ts_df_new, l8sr_ts_df[,c(13:18)])
+l8sr_ts_df_new$Sensor <- "L8"
+names(l8sr_ts_df_new)
+
+l578_ts_df <- rbind(l578_ts_df, l8sr_ts_df_new)
+```
+
+#Have a lot at some sample fields
+```{r}
+sample_fields <- sample(l578_ts_df$Area_acre, 1)
+sample_fields  #647208.9
+ggplot(subset(l578_ts_df, Area_acre %in% sample_fields & Year < 2015 ), aes(x = Date, y = EVI, color = as.factor(Sensor))) + geom_point() 
+```
+
+#Filter out some fields that might not be tomatoes
+```{r}
+l578_ts_df$Month <- lubridate::month(l578_ts_df$Date)
+ls_field <- split(l578_ts_df, list(l578_ts_df$Area_acre, l578_ts_df$Year))
+yesno <- rep(0, length(ls_field))
+for(i in 1:length(ls_field)){
+  df_peak <- subset(ls_field[[i]], Month>=6 & Month <= 9)
+  if(max(df_peak$NDVI, na.rm = TRUE) < 0.5){
+    yesno[i] <- (-1)
+  }
+  if(max(df_peak$NDVI, na.rm = TRUE) >= 0.5){
+    yesno[i] <- 1
+  }
+} 
+ls_field_filt <- ls_field[which(yesno == 1)]
+
+dim(l578_ts_df) #
+length(ls_field_filt) #18630
+length(ls_field) #226728
+ls_field_filt2 <- ls_field[which(yesno == -1)]
+l578_ts_df_filt2 <- do.call(rbind, ls_field_filt2)
+l578_ts_df_filt <- do.call(rbind, ls_field_filt)
+dim(l578_ts_df_filt2) #25586
+dim(l578_ts_df_filt) #2247775
+dim(l578_ts_df)  #2273361
+#sample plots of tomato fields
+sample1 <- sample(l578_ts_df_filt$Area_acre, 3)
+ggplot(subset(l578_ts_df_filt, Area_acre %in% sample1), aes(x = Date, y = EVI, color = as.factor(Area_acre))) + geom_point() 
+#sample plots of non-tomato fields
+sample2 <- sample(l578_ts_df_filt2$Area_acre, 3)
+ggplot(subset(l578_ts_df_filt2, Area_acre %in% sample2 &  Year <2016), aes(x = Date, y = EVI, color = as.factor(Area_acre))) + geom_point() + theme(legend.position = "none")
+sample3 <- sample(l578_ts_df_filt2$Area_acre, 10)
+ggplot(subset(l578_ts_df_filt2, Area_acre %in% sample3 &  Year <2016), aes(x = Date, y = EVI, color = as.factor(Area_acre))) + geom_point() + theme(legend.position = "none") + ylim(0,0.8)
+
+hist(sapply(ls_field_filt, function(x){max(x$EVI)}))
+summary(sapply(ls_field_filt, function(x){max(x$NDVI)}))
+#filter out dates that have too high value
+l578_ts_df_filt <- subset(l578_ts_df_filt, NDVI < 1)
+l578_ts_df_filt <- subset(l578_ts_df_filt, EVI < 1)
+dim(l578_ts_df_filt) #2246728, 18
+l578_ts_df_filt <- subset(l578_ts_df_filt, Blue < 1 & Green < 1 & Red < 1 & NIR < 1 & SWIR1 < 1 & SWIR2 < 1)
+summary(l578_ts_df_filt$NDVI)
+lapply(l578_ts_df_filt, summary)
+dim(l578_ts_df_filt) #2245898, 18
+
+sum(is.na(l578_ts_df_filt)) #0
+#remove the nas 
+head(l578_ts_df)
+l578_ts_df_filt$NIRv <- l578_ts_df_filt$NIR*l578_ts_df_filt$NDVI
+
+```
+
+#---------not useful right now---------------------------
+#Merge with the field ID
+```{r}
+
+a <- split(l5sr_ts_df, l5sr_ts_df$Year)
+sapply(a, function(x){length(unique(x$Area_acre))})
+b <- split(l7sr_ts_df, l7sr_ts_df$Year)
+sapply(b, function(x){length(unique(x$Area_acre))})
+d <- split(l8sr_ts_df, l8sr_ts_df$Year)
+sapply(d, function(x){length(unique(x$Area_acre))})
+sapply(ls_tomato_fidbound, function(x){length(x$ID)})
+
+l5sr_ts_df_2008 <- subset(l5sr_ts_df, Year == 2008)
+l5sr_ts_df_2009 <- subset(l5sr_ts_df, Year == 2009)
+l5sr_ts_df_2010 <- subset(l5sr_ts_df, Year == 2010)
+l5sr_ts_df_2011 <- subset(l5sr_ts_df, Year == 2011)
+
+l7sr_ts_df_2008 <- subset(l7sr_ts_df, Year == 2008)
+l7sr_ts_df_2009 <- subset(l7sr_ts_df, Year == 2009)
+l7sr_ts_df_2010 <- subset(l7sr_ts_df, Year == 2010)
+l7sr_ts_df_2011 <- subset(l7sr_ts_df, Year == 2011)
+l7sr_ts_df_2012 <- subset(l7sr_ts_df, Year == 2012)
+l7sr_ts_df_2013 <- subset(l7sr_ts_df, Year == 2013)
+l7sr_ts_df_2014 <- subset(l7sr_ts_df, Year == 2014)
+l7sr_ts_df_2015 <- subset(l7sr_ts_df, Year == 2015)
+l7sr_ts_df_2016 <- subset(l7sr_ts_df, Year == 2016)
+l7sr_ts_df_2017 <- subset(l7sr_ts_df, Year == 2017)
+l7sr_ts_df_2018 <- subset(l7sr_ts_df, Year == 2018)
+l7sr_ts_df_2019 <- subset(l7sr_ts_df, Year == 2019)
+
+l8sr_ts_df_2013 <- subset(l8sr_ts_df, Year==2013)
+l8sr_ts_df_2014 <- subset(l8sr_ts_df, Year==2014)
+l8sr_ts_df_2015 <- subset(l8sr_ts_df, Year==2015)
+l8sr_ts_df_2016 <- subset(l8sr_ts_df, Year==2016)
+l8sr_ts_df_2017 <- subset(l8sr_ts_df, Year==2017)
+l8sr_ts_df_2018 <- subset(l8sr_ts_df, Year==2018)
+l8sr_ts_df_2019 <- subset(l8sr_ts_df, Year==2019)
+
+l8sr_ts_df_2013 <- merge(l8sr_ts_df_2013, tomato_fidbound_2013, by = c("Year", "Area_acre"))
+l8sr_ts_df_2014 <- merge(l8sr_ts_df_2014, tomato_fidbound_2014, by = c("Year", "Area_acre"))
+l8sr_ts_df_2015 <- merge(l8sr_ts_df_2015, tomato_fidbound_2015, by = c("Year", "Area_acre"))
+l8sr_ts_df_2016 <- merge(l8sr_ts_df_2016, tomato_fidbound_2016, by = c("Year", "Area_acre"))
+l8sr_ts_df_2017 <- merge(l8sr_ts_df_2017, tomato_fidbound_2017, by = c("Year", "Area_acre"))
+l8sr_ts_df_2018 <- merge(l8sr_ts_df_2018, tomato_fidbound_2018, by = c("Year", "Area_acre"))
+l8sr_ts_df_2019 <- merge(l8sr_ts_df_2019, tomato_fidbound_2019, by = c("Year", "Area_acre"))
+
+
+
+l8sr_ts_df_2013 <- merge(l8sr_ts_df_2013, tomato_fidbound_2013, by = c("Year", "Area_acre"))
+l8sr_ts_df_2014 <- merge(l8sr_ts_df_2014, tomato_fidbound_2014, by = c("Year", "Area_acre"))
+l8sr_ts_df_2015 <- merge(l8sr_ts_df_2015, tomato_fidbound_2015, by = c("Year", "Area_acre"))
+l8sr_ts_df_2016 <- merge(l8sr_ts_df_2016, tomato_fidbound_2016, by = c("Year", "Area_acre"))
+l8sr_ts_df_2017 <- merge(l8sr_ts_df_2017, tomato_fidbound_2017, by = c("Year", "Area_acre"))
+l8sr_ts_df_2018 <- merge(l8sr_ts_df_2018, tomato_fidbound_2018, by = c("Year", "Area_acre"))
+l8sr_ts_df_2019 <- merge(l8sr_ts_df_2019, tomato_fidbound_2019, by = c("Year", "Area_acre"))
+
+```
+#---------not useful right now---------------------------
+#
+#Monthly Average for each band for county 
+```{r}
+
+l578_county_month <- aggregate(subset(l578_ts_df_filt, Month %in% c(3:10))[,c("Blue","Green","Red","NIR","SWIR1","BT","SWIR2","NDVI","EVI","EVI2","WDRVI","NDMI","NIRv")], by = list("Year" = subset(l578_ts_df_filt, Month %in% c(3:10))$Year, "County" = subset(l578_ts_df_filt, Month %in% c(3:10))$County, "Month" = subset(l578_ts_df_filt, Month %in% c(3:10))$Month),FUN = mean)
+#check if there's any nas 
+sum(is.na(l578_county_month)) #0
+dim(l578_county_month)  #1940,16
+head(l578_county_month)
+
+
+```
+
+#Combine with Yield Data
+```{r}
+l578_county_month_yield <- merge(l578_county_month, yield_2008_2019, by = c("Year","County"))
+head(l578_county_month_yield)
+dim(l578_county_month_yield) #1293, 19
+sum(is.na(l578_county_month_yield)) #0
+
+#convert to wide
+l578_county_month_yield <- tidyr::pivot_wider(data = l578_county_month_yield, names_from =  Month, values_from = Blue:NIRv)
+dim(l578_county_month_yield) #162, 109
+sum(is.na(l578_county_month_yield)) #39
+l578_county_month_yield <- na.omit(l578_county_month_yield)
+dim(l578_county_month_yield) #159,109
+
+#change of yield 
+ggplot(l578_county_month_yield, aes(x = Year, y = Yield)) + geom_point(aes(color = County)) + theme_bw() + geom_smooth(method = "lm") 
+ggplot(l578_county_month_yield, aes(x = Year, y = Yield, color = County)) + geom_point() + theme_bw() + geom_smooth(method = "lm", se = FALSE) 
+
+##If there's a trned
+lmtrend <- lm(l578_county_month_yield$Yield ~ l578_county_month_yield$Year)
+summary(lmtrend)  #p < 0.006, r2 = 0.0456
+
+#Combine with latitude, longitude
+l578_county_month_yield <- merge(l578_county_month_yield, CA_counties@data[,c("NAME","INTPTLAT","INTPTLON")], by.x = "County", by.y = "NAME")
+dim(l578_county_month_yield)#162,98
+names(l578_county_month_yield)[97:98] <- c("Latitude","Longitude")
+
+#Area
+class(l578_county_month_yield$County)
+
+
+#remove the outlier 
+l578_county_month_yield <- subset(l578_county_month_yield, County != "Santa Clara")
+sum(l578_county_month_yield$Yield>60, na.rm = TRUE) #1
+max(l578_county_month_yield$Yield)
+l578_county_month_yield <- subset(l578_county_month_yield, Yield < 65)
+
+```
+#Exploratory analysis
+```{r}
+#l578_county_month_yield <- na.omit(l578_county_month_yield)
+
+
+cor_vis <- cor(x = l578_county_month_yield[,6:109], y = l578_county_month_yield$Yield, use = "complete.obs")
+cor_vis <- data.frame("var" = names(l578_county_month_yield)[6:109], "r" = cor_vis)
+View(cor_vis)
+l578_county_month_yield 
+
+ggplot(l578_county_month_yield, aes(x = NIRv_6, y = Yield)) + geom_point(aes(color = County)) + theme_bw() + geom_smooth(method = "lm") + ylab("Yield (tons/acre)")
+lm1 <- lm(Yield~NIRv_6, l578_county_month_yield)
+summary(lm1)
+
+ggplot(l578_county_month_yield, aes(x = NDVI_8, y = Yield)) + geom_point(aes(color = County)) + theme_bw() + geom_smooth(method = "lm") + ylab("Yield (tons/acre)")
+lm2 <- lm(Yield~NDVI_8, l578_county_month_yield)
+summary(lm2)
+
+```
+#Read Weather data from Daymet
+```{r}
+path_daymet <- "D:/Tomato_Phenology_RemoteSensing/GEE_output/Daymet"
+list.files(path_daymet)
+maxtemp_county <- read.csv(file.path(path_daymet, "CA_county_maxtemp_2.csv"))
+mintemp_county <- read.csv(file.path(path_daymet, "CA_county_mintemp_2.csv"))
+#subset
+maxtemp_county <- maxtemp_county[,c(4:6)]
+mintemp_county <- mintemp_county[,c(4:6)]
+dim(maxtemp_county)  #20880, 3
+dim(mintemp_county) #20880, 3
+names(maxtemp_county) <- c("County","MaxTemp","Time")
+names(mintemp_county) <- c("County","MinTemp","Time")
+identical(maxtemp_county$County, mintemp_county$County)
+identical(maxtemp_county$Time, mintemp_county$Time)
+#merge 
+daymet_county <- merge(maxtemp_county, mintemp_county, by = c("County","Time"))
+dim(daymet_county) #20880,4
+#change Time column
+daymet_county$Time <- strptime(as.character(daymet_county$Time), format = "%Y-%m-%d")
+#add year and month
+daymet_county$Year <- year(daymet_county$Time)
+daymet_county$Month <- month(daymet_county$Time)
+dim(daymet_county) #20880,5
+#remove time 
+daymet_county$Time <- NULL
+#long  to wide
+daymet_county_wide <- tidyr::pivot_wider(daymet_county, names_from = Month, values_from = MaxTemp:MinTemp)
+daymet_county_wide
+dim(daymet_county_wide)  #1740,26
+names(daymet_county_wide)
+
+
+maxtemp_daily <- read.csv(file.path(path_daymet, "daily_maxtemp_2.csv"))
+mintemp_daily <- read.csv(file.path(path_daymet, "daily_mintemp_2.csv"))
+head(maxtemp_daily)
+maxtemp_daily$.geo<- NULL
+maxtemp_daily$system.time_start <- NULL
+
+names(maxtemp_daily) <- c("Date","Latitude","Longitude","County","MaxTemp")
+maxtemp_daily$Date <- strptime(as.character(maxtemp_daily$Date), format = "%Y%m$d")
+
+```
+#Read weather data from Gridmet
+```{r}
+path_gridmet = "D:/Tomato_Phenology_RemoteSensing/GEE_output/Gridmet"
+list.files(path_gridmet)
+vpd_county <- read.csv(file.path(path_gridmet, "CA_county_vpd.csv"))
+prcp_county <- read.csv(file.path(path_daymet, "CA_county_prcp.csv"))
+eto_county <- read.csv(file.path(path_gridmet, "CA_county_eto.csv"))
+etr_county <- read.csv(file.path(path_gridmet, "CA_county_etr.csv"))
+srad_county <- read.csv(file.path(path_gridmet, "CA_county_srad.csv"))
+vs_county <- read.csv(file.path(path_gridmet, "CA_county_vs.csv"))
+#subset 
+
+
+
+```
+
+#Combine with weather data
+```{r}
+names(l578_county_month_yield)
+l578_county_month_yield_weather <- merge(l578_county_month_yield, daymet_county_wide, by = c("County","Year"))
+dim(l578_county_month_yield_weather) #149, 133
+sum(is.na(l578_county_month_yield_weather$Yield)) #0
+```
+
+#Yield model all together
+##Preprocessing
+```{r}
+#cor(l578_county_month_yield_weather$Yield, l578_county_month_yield_weather[,c(97:120)])
+
+#filter out high correlated ones 
+#check variable correlation higher than 0.7
+cor_cut <- findCorrelation(cor(l578_county_month_yield_weather[,c(6:132)]), cutoff = 0.7, verbose =  TRUE, names = TRUE, exact = ncol(l578_county_month_yield_weather[,c(6:132)]))
+l578_county_month_yield_weather <- cbind(l578_county_month_yield_weather[,c(1:5)],l578_county_month_yield_weather[,c(6:120)][cor_cut])
+
+#feature selection 
+rfectrl <- rfeControl(functions = rfFuncs, method = "cv", verbose = FALSE)
+lmprofile <- rfe(x = l578_county_month_yield_weather[,c(6:90)], y = l578_county_month_yield_weather$Yield, rfeControl = rfectrl)
+lmprofile
+#top 5 varaibles: NIR_5, NIRv_6, NIR_6, Blue_4, EVI2_6
+
+```
+
+##with only VIs 
+```{r}
+set.seed(777) 
+
+intrain <- createDataPartition(y = l578_county_month_yield_weather$Yield, p = 0.7, list = FALSE)
+training <- l578_county_month_yield_weather[intrain,]
+testing <- l578_county_month_yield_weather[-intrain,]
+traincrtl <- trainControl(method = "cv", number = 5)
+
+#Ridge
+ridgefit_1 <-  train(Yield~., data = training[,c(4,6:90)], method = "ridge", trControl = traincrtl, tuneLength = 15, verbose = FALSE)
+ridgefit_1
+cor(predict(ridgefit_1, testing), testing$Yield)^2  #0.562
+
+#RF
+rffit_1 <- train(Yield~., data = training[,c(4,6:90)], method = "rf", trControl = traincrtl, tuneLength = 15)
+plot(varImp(rffit_1))
+cor(predict(rffit_1, testing), testing$Yield)^2  #0.52
+
+#PLSR
+plsfit_1 <- train(Yield~., data = training[,c(4,6:90)], method = "pls", trControl = traincrtl, tuneLength = 15, preProc = c("center", "scale"))
+plsfit_1
+ggplot(plsfit_1)
+pred_pls1 <- predict(plsfit_1, testing)
+
+#
+```
+
+##VIs + weather
+```{r}
+set.seed(77)
+
+intrain <- createDataPartition(y = l578_county_month_yield_weather$Yield, p = 0.7, list = FALSE)
+training <- l578_county_month_yield_weather[intrain,]
+testing <- l578_county_month_yield_weather[-intrain,]
+nrow(training); nrow(testing) #96,38
+
+crtl <- trainControl(method = "repeatedcv", repeats = 5)
+
+#variable selection before RF
+
+
+#random forest
+rffit <- train(Yield ~., data = training[,c(4,6:120)], method = "rf", trControl = crtl, verbose = FALSE)
+
+#stochastic gradient boosting
+
+#linear regression 
+
+#svm
+
+#ann
+
+
+```
+#Extract phenology for each field
+```{r}
+
+l578_ts_df_filt1 <- subset(l578_ts_df, Blue < 1 & Green < 1 & Red < 1 & NIR < 1 & SWIR1 < 1 & SWIR2 < 1 & NDVI < 1 & EVI<1)
+ls_field_filt1 <- split(l578_ts_df_filt1, list(l578_ts_df_filt1$Area_acre, l578_ts_df_filt1$Year))
+yesno <- rep(0, length(ls_field_filt1))
+
+field_pheno <- data.frame("ID" = names(ls_field_filt1), "Year" = 0, "UD_T"=0,"UD_V"=0, "SD_T"=0,"SD_V"=0, "DD_T"=0,"DD_V"=0,"RD_T" = 0, "RD_V" = 0, "max_T" = 0, "max_V"=0, "LengthGS"=0)
+for(i in 215567:length(ls_field_filt1)){
+  if(nrow(ls_field_filt1[[i]])==0){
+    yesno[i] <- (-1)
+  } 
+  if(nrow(ls_field_filt1[[i]])!=0){
+    field_pheno$ID[i] <- ls_field_filt1[[i]]$Area_acre
+    field_pheno$Year[i] <- ls_field_filt1[[i]]$Year
+    df <- ls_field_filt1[[i]]
+    df <- df[order(df$Date),]
+    DOY <- as.numeric(strftime(df$Date, format = "%j"))
+    EVI_filt <- sgolayfilt(df$EVI)
+    EVI_DOY <- cbind(1:365, NA)
+    EVI_DOY[DOY,2] <- EVI_filt 
+    EVI_smooth <- na_interpolation(x = EVI_DOY, option = "linear")
+    curve_fit <- curvefit(y = EVI_smooth[,2], t = EVI_smooth[,1], tout = 1:365, methods = "Gu")
+    pheno_stage <- get_pheno.fFITs(curve_fit, method = "Gu")
+    fitted_value <- curve_fit$fFIT$Gu$zs$iter2
+    #Extract useful information 
+    ##Upturn date
+    if(sum(is.na(pheno_stage$GU))==0){
+      field_pheno$UD_T[i] <- pheno_stage$GU[1]
+      field_pheno$UD_V[i] <- fitted_value[pheno_stage$GU[1]]
+      ##stabilization date
+      field_pheno$SD_T[i] <- pheno_stage$GU[2]
+      field_pheno$SD_V[i] <- fitted_value[pheno_stage$GU[2]]
+      ##downturn date
+      field_pheno$DD_T[i] <- pheno_stage$GU[3]
+      field_pheno$DD_V[i] <- fitted_value[pheno_stage$GU[3]]
+      ##recession date 
+      field_pheno$RD_T[i] <- pheno_stage$GU[4]
+      field_pheno$RD_V[i] <- fitted_value[pheno_stage$GU[4]]
+      #maximum value 
+      field_pheno$max_T[i] <- pheno_stage$GU[2]+which.max(fitted_value[pheno_stage$GU[2]:pheno_stage$GU[3]])-1
+      field_pheno$max_V[i] <- max(fitted_value[pheno_stage$GU[2]:pheno_stage$GU[3]])
+      #length of gs 
+      field_pheno$LengthGS[i] <- field_pheno$RD_T[i] - field_pheno$UD_T[i]
+    }
+    else{
+      field_pheno[i,] <- NA
+    }
+  }
+}
+a <- field_pheno[which(yesno!=-1),]
+head(a)
+a <- na.omit(a)
+head(a)
+dim(a)  #47150
+sum(yesno==-1) #176987
+
+```
+
+#Extract useful information from each field
+```{r}
+pheno_extract <- function(ts){
+  ls_field <- split(ts, ts$ID)
+  #filter out some outliers 
+  yesno <- rep(0, length(ls_field))
+  for(i in 1:length(ls_field)){
+    ls_field[[i]]$Month <- lubridate::month(ls_field[[i]]$Date)
+    df_peak <- subset(ls_field[[i]], Month>=6 & Month <=9)
+    if(max(df_peak$NDVI) < 0.5){
+      yesno[i] <- (-1)
+    }
+    if(max(df_peak$NDVI) >= 0.5){
+      yesno[i] <- 1
+    }
+  }
+  print(length(which(yesno==-1)))
+  #apply the filter
+  ls_field_filt1 <- ls_field[which(yesno == 1)]
+
+  #Extract phenology information 
+  ##The dataframe to store the results
+  field_sum <- data.frame("ID" = names(ls_field_filt1), "Year" = unique(lubridate::year(ls_field_filt1[[1]]$Date)), "UD_T"=0,"UD_V"=0, "SD_T"=0,"SD_V"=0, "DD_T"=0,"DD_V"=0,"RD_T" = 0, "RD_V" = 0, "max_T" = 0, "max_V"=0, "LengthGS"=0)
+  for(i in 1:length(ls_field_filt1)){
+    #subset
+    df <- ls_field_filt1[[i]]
+    #sort by date
+    df <- df[order(df$Date),]
+    #sgolay filter 
+    #EVI_filt <- sgolayfilt(df$EVI)
+    #phenofit package 
+    curve_fit <- curvefit(y = df$EVI, t = yday(df$Date), tout = 1:365, methods = "Gu")
+    pheno_stage <- get_pheno.fFITs(curve_fit, method = "Gu")
+    fitted_value <- curve_fit$fFIT$Gu$zs$iter2
+    #Extract useful information 
+    ##Upturn date
+    if(sum(is.na(pheno_stage$GU))==0){
+      field_sum$UD_T[i] <- pheno_stage$GU[1]
+      field_sum$UD_V[i] <- fitted_value[pheno_stage$GU[1]]
+      ##stabilization date
+      field_sum$SD_T[i] <- pheno_stage$GU[2]
+      field_sum$SD_V[i] <- fitted_value[pheno_stage$GU[2]]
+      ##downturn date
+      field_sum$DD_T[i] <- pheno_stage$GU[3]
+      field_sum$DD_V[i] <- fitted_value[pheno_stage$GU[3]]
+      ##recession date 
+      field_sum$RD_T[i] <- pheno_stage$GU[4]
+      field_sum$RD_V[i] <- fitted_value[pheno_stage$GU[4]]
+      #maximum value 
+      field_sum$max_T[i] <- pheno_stage$GU[2]+which.max(fitted_value[pheno_stage$GU[2]:pheno_stage$GU[3]])-1
+      field_sum$max_V[i] <- max(fitted_value[pheno_stage$GU[2]:pheno_stage$GU[3]])
+      #length of gs 
+      field_sum$LengthGS[i] <- field_sum$RD_T[i] - field_sum$UD_T[i]
+    }
+    else{
+      field_sum[i,] <- NA
+    }
+  }
+  #field_sum_narm <- na.omit(field_sum)
+
+  return(field_sum)
+}
+
+#apply the function 
+field_2013_sum <- pheno_extract(l8sr_ts_df_2013) #re-run
+field_2014_sum <- pheno_extract(l8sr_ts_df_2014) #re-run
+field_2015_sum <- pheno_extract(l8sr_ts_df_2015)
+
+field_2016_sum <- pheno_extract(l8sr_ts_df_2016)
+field_2017_sum <- pheno_extract(l8sr_ts_df_2017)
+field_2018_sum <- pheno_extract(l8sr_ts_df_2018)
+field_2019_sum <- pheno_extract(l8sr_ts_df_2019)
+field_2013_sum <- pheno_extract(l8sr_ts_df_2013) #re-run
+field_2014_sum <- pheno_extract(l8sr_ts_df_2014) #re-run
+
+```
+
+##Plot exploratory
+```{r}
+field_2013_sum_1 <- na.omit(field_2013_sum)
+field_2014_sum_1 <- na.omit(field_2014_sum)
+field_2015_sum_1 <- na.omit(field_2015_sum)
+field_2016_sum_1 <- na.omit(field_2016_sum)
+field_2017_sum_1 <- na.omit(field_2017_sum)
+field_2018_sum_1 <- na.omit(field_2018_sum)
+field_2019_sum_1 <- na.omit(field_2019_sum)
+dim(field_2013_sum_1) #4896
+dim(field_2014_sum_1) #6062
+dim(field_2015_sum_1) #5250
+dim(field_2016_sum_1) #error
+dim(field_2017_sum_1) #2194
+dim(field_2018_sum_1) #error
+dim(field_2019_sum_1) #error
+
+field_2013_sum_1 <- merge(field_2013_sum_1, tomato_fidbound_2013, by = c("Year","ID"))
+field_2014_sum_1 <- merge(field_2014_sum_1, tomato_fidbound_2014, by = c("Year","ID"))
+field_2015_sum_1 <- merge(field_2015_sum_1, tomato_fidbound_2015, by = c("Year","ID"))
+field_2016_sum_1 <- merge(field_2016_sum_1, tomato_fidbound_2016, by = c("Year","ID"))
+field_2017_sum_1 <- merge(field_2017_sum_1, tomato_fidbound_2017, by = c("Year","ID"))
+field_2018_sum_1 <- merge(field_2018_sum_1, tomato_fidbound_2018, by = c("Year","ID"))
+field_2019_sum_1 <- merge(field_2019_sum_1, tomato_fidbound_2019, by = c("Year","ID"))
+
+field_sum_1 <- rbind(field_2013_sum_1, field_2014_sum_1, field_2015_sum_1, field_2017_sum_1)
+dim(field_sum_1)
+#merge with other 
+field_sum_yield <- aggregate(field_sum_1[,c("UD_V","SD_V","DD_V","RD_V","max_V","LengthGS")], by = list("County" = field_sum_1$NAME, "Year" = field_sum_1$Year), FUN = mean)
+field_sum_yield <- merge(field_sum_yield, yield_county_report, by = c("Year","County"))
+dim(field_sum_yield)
+head(field_sum_yield)
+tail(field_sum_yield)
+ggplot(field_sum_yield, aes(x = max_V, y = Yield)) + geom_point(aes(color = as.factor(Year))) + geom_smooth(method = "lm") + theme_bw()
+ggplot(field_sum_yield, aes(x = UD_V, y = Yield)) + geom_point(aes(color = as.factor(Year))) + geom_smooth(method = "lm") + theme_bw()
+ggplot(field_sum_yield, aes(x = SD_V, y = Yield)) + geom_point(aes(color = as.factor(Year))) + geom_smooth(method = "lm") + theme_bw()
+ggplot(field_sum_yield, aes(x = DD_V, y = Yield)) + geom_point(aes(color = as.factor(Year))) + geom_smooth(method = "lm") + theme_bw()
+ggplot(field_sum_yield, aes(x = RD_V, y = Yield)) + geom_point(aes(color = as.factor(Year))) + geom_smooth(method = "lm") + theme_bw()
+ggplot(field_sum_yield, aes(x = LengthGS, y = Yield)) + geom_point(aes(color = as.factor(Year))) + geom_smooth(method = "lm") + theme_bw()
+lm1 <- lm(Yield~max_V, field_sum_yield)
+summary(lm1) #0.2945, p-value = 9.76e-05
+lm2 <- lm(Yield~UD_V, field_sum_yield)
+summary(lm2) #0.006, p-value = 0.602
+lm3 <- lm(Yield~SD_V, field_sum_yield)
+summary(lm3) #0.08595, p-value = 0.048
+lm4 <- lm(Yield~DD_V, field_sum_yield)
+summary(lm4) #0.2488, p-value = 0.0004
+lm5 <- lm(Yield~LengthGS, field_sum_yield)
+summary(lm5) #0.0195, p-value = 0.3547
+
+
+ls_field_sum_yield_year <- split(field_sum_yield, field_sum_yield$Year)
+for(i in 1:length(ls_field_sum_yield_year)){
+  df <- ls_field_sum_yield_year[[i]]
+  lm1 <- lm(Yield~EVI_max, df)
+  print(summary(lm1))
+}
+
+head(field_sum_1)
+```
+##Combine with climate data
+```{r}
+field_sum_yield
+```
+
+##Only 2013
+```{r}
+ls_field_2013 <- split(l8sr_ts_df_2013, l8sr_ts_df_2013$ID)
+length(ls_field_2013) #5223
+
+#filter out the 
+yesno_2013 <- rep(0, length(ls_field_2013))
+for(i in 1:length(ls_field_2013)){
+  #Filter out 
+  df_peak <- subset(ls_field_2013[[i]], Date< "2013-09-01" & Date > "2013-06-01")
+  if(max(df_peak$NDVI)<0.5){
+    yesno_2013[i] <- (-1)
+  }
+  if(max(df_peak$NDVI)>=0.5){
+    yesno_2013[i] <- 1
+  }
+}
+length(which(yesno_2013==-1)) #61
+length(which(yesno_2013==1)) #5162
+ls_field_2013_filt1 <- ls_field_2013[which(yesno_2013==1)]
+
+#extract information 
+field_2013_sum <- data.frame("ID" = names(ls_field_2013_filt1),"Year" = 2013, "UD_T"=0,"UD_V"=0, "SD_T"=0,"SD_V"=0, "DD_T"=0,"DD_V"=0,"RD_T" = 0, "RD_V" = 0, "max_T" = 0, "max_V"=0, "LengthGS"=0)
+for(i in 1:length(ls_field_2013_filt1)){
+  #subset
+  df <- ls_field_2013_filt1[[i]]
+  #sort by date
+  df <- df[order(df$Date),]
+  #sgolay filter 
+  #EVI_filt <- sgolayfilt(df$EVI)
+  #phenofit package 
+  curve_fit <- curvefit(y = df$EVI, t = yday(df$Date), tout = 1:365, methods = "Gu")
+  pheno_stage <- get_pheno.fFITs(curve_fit, method = "Gu")
+  fitted_value <- curve_fit$fFIT$Gu$zs$iter2
+  #Extract useful information 
+  ##Upturn date
+  if(sum(is.na(pheno_stage$GU))==0){
+    field_2013_sum$UD_T[i] <- pheno_stage$GU[1]
+    field_2013_sum$UD_V[i] <- fitted_value[pheno_stage$GU[1]]
+    ##stabilization date
+    field_2013_sum$SD_T[i] <- pheno_stage$GU[2]
+    field_2013_sum$SD_V[i] <- fitted_value[pheno_stage$GU[2]]
+    ##downturn date
+    field_2013_sum$DD_T[i] <- pheno_stage$GU[3]
+    field_2013_sum$DD_V[i] <- fitted_value[pheno_stage$GU[3]]
+    ##recession date 
+    field_2013_sum$RD_T[i] <- pheno_stage$GU[4]
+    field_2013_sum$RD_V[i] <- fitted_value[pheno_stage$GU[4]]
+    #maximum value 
+    field_2013_sum$max_T[i] <- pheno_stage$GU[2]+which.max(fitted_value[pheno_stage$GU[2]:pheno_stage$GU[3]])-1
+    field_2013_sum$max_V[i] <- max(fitted_value[pheno_stage$GU[2]:pheno_stage$GU[3]])
+    #length of gs 
+    field_2013_sum$LengthGS[i] <- field_2013_sum$RD_T[i] - field_2013_sum$UD_T[i]
+  }
+  else{
+    field_2013_sum[i,] <- NA
+  }
+  
+}
+
+field_2013_sum_narm <- na.omit(field_2013_sum)
+dim(field_2013_sum_narm)
+
+#merge with other 
+field_2013_sum_narm <- merge(field_2013_sum_narm, tomato_fidbound_2013, by = c("Year","ID"))
+ggplot(field_2013_sum_narm, aes(x = Latitude, y = UD_T)) + geom_point()
+
+unique(field_2013_sum_narm$NAME)
+ggplot(field_2013_sum_narm, aes(x = as.factor(NAME), y = max_T)) + geom_boxplot()
+
+a <- aggregate(field_2013_sum_narm$max_T, by = list("County"=field_2013_sum_narm$NAME), FUN = mean)
+head(a)
+names(a)[2] <- "EVI_max"
+a$Year = 2013
+a <- merge(a, yield_county_report, by = c("Year","County"))
+head(a)
+dim(a) #12,6
+ggplot(a, aes(x = EVI_max, y = Yield,color = County)) + geom_point()
+
+
+```
+
+

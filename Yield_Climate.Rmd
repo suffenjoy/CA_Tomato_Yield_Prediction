@@ -1,0 +1,416 @@
+---
+title: "Yield_Climate"
+author: "Zhehan"
+date: "11/28/2020"
+output: html_document
+---
+
+#Package
+```{r}
+library(ggplot2)
+library(gridExtra)
+library(tidyr)
+library(raster)
+library(sp)
+library(readxl)
+library(lubridate)
+library(RColorBrewer)
+library(corrplot)
+library(caret)
+```
+#CA_County
+```{r}
+path_shp <- "C:/Users/tangz/Box Sync/Tomato_Phenology_RemoteSensing/Shapefiles"
+CA_County <- shapefile(file.path(path_shp, "CA_Counties_TIGER2016.shp"))
+tomato_fidbound_2013_gee <- shapefile(file.path(path_shp, "tomato_fidbound_2013_gee.shp"))
+plot(CA_County)
+head(CA_County@data)
+CA_County@data <- CA_County@data[,c(5,16,17)]
+CA_County@data
+
+#Output
+crs(tomato_fidbound_2013_gee)
+CA_County_GEE <- spTransform(CA_County, crs(tomato_fidbound_2013_gee))
+crs(CA_County_GEE)
+shapefile(CA_County_GEE,file.path(path_shp, "CA_County_GEE.shp"),overwrite=  TRUE)
+```
+
+
+#Read Yield data from NASS USDA
+```{r}
+path_NASS <- "C:/Users/tangz/Box Sync/Tomato_Phenology_RemoteSensing/Historic_Yield_Data/NASS"
+yield_county_nass <- read.csv(file.path(path_NASS, "Tomato_Processing_Harvested.csv"))
+head(yield_county_nass)
+
+#clean the dataset 
+yield_county_nass <- yield_county_nass[,c("Year","State","County","Value")]
+head(yield_county_nass)
+unique(yield_county_nass$State)
+yield_county_nass <- subset(yield_county_nass, State=="CALIFORNIA")
+unique(yield_county_nass$County)
+
+ggplot(yield_county_nass, aes(x = Year, y = Value, color = County)) + geom_point() + geom_line() + theme_bw()
+ggplot(subset(yield_county_nass, County!="OTHER (COMBINED) COUNTIES" & Year>2007), aes(x = Year, y = Value, color = County)) + geom_point() + theme_bw() + facet_wrap(~County)
+
+```
+
+#Read Yield data from annual report 
+```{r}
+path_report <- "C:/Users/tangz/Box Sync/Tomato_Phenology_RemoteSensing/Historic_Yield_Data/Annual_Report"
+yield_county_report <- read_excel(file.path(path_report, "Processing Tomato Yield.xlsx"), sheet = 1, skip = 2)
+yield_county_report <- gather(yield_county_report, Year, Yield, '1999':'2019')
+head(yield_county_report)
+names(yield_county_report)[1] <- "County"
+
+ggplot(yield_county_report, aes(x  = Year, y = Yield, color = County)) + geom_point() + theme_bw()
+
+totyield_county_report <- read_excel(file.path(path_report, "Processing Tomato Yield.xlsx"), sheet = 2, skip = 2)
+totyield_county_report <- gather(totyield_county_report, Year, TotalYield, '1999':'2019')
+names(totyield_county_report)[1] <- "County"
+head(totyield_county_report)
+
+#combine 
+yield_county_report <- base::merge(totyield_county_report,yield_county_report,by = c("County","Year"))
+head(yield_county_report)
+
+#add area 
+yield_county_report$Area <- yield_county_report$TotalYield/yield_county_report$Yield
+
+#change class
+str(yield_county_report)
+yield_county_report$Year <- as.numeric(yield_county_report$Year)
+
+ggplot(subset(yield_county_report, Year >=2010), aes(x = Year, y = Yield, color = County)) + geom_point() + theme_bw() + facet_wrap(~County) + ylim(30,70) + scale_x_continuous(breaks = c(2010, 2014, 2018))
+ggplot(subset(yield_county_report, Year > 2007), aes(x = Year, y = Yield, color = County)) + geom_point() + theme_bw() + facet_wrap(~County) + ylim(30,70) + scale_x_continuous(breaks = c(2010, 2014, 2018)) + ylab("Yield (tons/acre)")
+
+
+ggplot(subset(yield_county_nass, County!="OTHER (COMBINED) COUNTIES" & Year>2007 & County != "BUTTE"), aes(x = Year, y = Value, color = County)) + geom_point() + theme_bw() + facet_wrap(~County) + ylim(30,70) + scale_x_continuous(breaks = c(2010, 2014, 2018))
+
+```
+
+#Read Weather data from Daymet
+```{r}
+path_daymet <- "D:/Tomato_Phenology_RemoteSensing/GEE_output/Daymet"
+list.files(path_daymet)
+maxtemp_county <- read.csv(file.path(path_daymet, "CA_county_maxtemp_2.csv"))
+mintemp_county <- read.csv(file.path(path_daymet, "CA_county_mintemp_2.csv"))
+#subset
+maxtemp_county <- maxtemp_county[,c(4:6)]
+mintemp_county <- mintemp_county[,c(4:6)]
+dim(maxtemp_county)  #20880, 3
+dim(mintemp_county) #20880, 3
+names(maxtemp_county) <- c("County","MaxTemp","Time")
+names(mintemp_county) <- c("County","MinTemp","Time")
+identical(maxtemp_county$County, mintemp_county$County)
+identical(maxtemp_county$Time, mintemp_county$Time)
+#merge 
+daymet_county <- merge(maxtemp_county, mintemp_county, by = c("County","Time"))
+dim(daymet_county) #20880,4
+#change Time column
+daymet_county$Time <- strptime(as.character(daymet_county$Time), format = "%Y-%m-%d")
+#add year and month
+daymet_county$Year <- year(daymet_county$Time)
+daymet_county$Month <- month(daymet_county$Time)
+dim(daymet_county) #20880,5
+#remove time 
+daymet_county$Time <- NULL
+#long  to wide
+daymet_county_wide <- tidyr::pivot_wider(daymet_county, names_from = Month, values_from = MaxTemp:MinTemp)
+daymet_county_wide
+dim(daymet_county_wide)  #1740,26
+names(daymet_county_wide)
+
+
+```
+
+#Combine the yield with the weather data
+```{r}
+head(yield_county_report)
+head(daymet_county)
+dim(yield_county_report) #252,4
+dim(daymet_county_wide) #1740, 26
+yield_daymet_county <- merge(yield_county_report, daymet_county_wide, by = c("County","Year"))
+dim(yield_daymet_county)  #252, 28
+#remove the NAs 
+sum(is.na(yield_daymet_county)) #28 NAs
+yield_daymet_county <- na.omit(yield_daymet_county)
+dim(yield_daymet_county) #238, 29
+#change the classes
+str(yield_daymet_county)
+yield_daymet_county$County <- as.factor(yield_daymet_county$County)
+yield_daymet_county$Year <- as.numeric(yield_daymet_county$Year)
+dim(yield_daymet_county) #238,29
+```
+
+##Exploratory Analysis of the county-level data
+```{r}
+ggplot(yield_daymet_county, aes(x = Year, y = Yield)) + geom_point(aes(color = County)) + theme_bw() + geom_smooth(method = "lm")
+ggplot(yield_daymet_county, aes(x = Year, y = Yield, color = County)) + geom_point() + theme_bw() + geom_smooth(method = "lm", se = FALSE)
+sum(yield_daymet_county$Yield>65) #1
+#remove one outlier 
+yield_daymet_county <- subset(yield_daymet_county, Yield < 65)
+dim(yield_daymet_county) #237,28
+
+par(mfrow = c(2,3))
+for(i in 1:24){
+  plot(x = yield_daymet_county[,i+4], y = yield_daymet_county$Yield, xlab = names(yield_daymet_county)[i+4], ylab = "Yield")
+}
+```
+
+#State weighted Average
+```{r}
+yield_daymet_state <- data.frame(matrix(0, nrow = 21, ncol = 28))
+names(yield_daymet_state) <- names(yield_daymet_county)[2:29]
+yield_daymet_state
+yield_daymet_state$Year <- unique(yield_daymet_county$Year)
+
+
+yield_daymet_state[,c(1,2,4)] <- aggregate(yield_daymet_county[,c('TotalYield','Area')], by = list("Year"=yield_daymet_county$Year), sum)
+yield_daymet_state$Yield <- yield_daymet_state$TotalYield/yield_daymet_state$Area
+for(i in 1999:2019){
+  df <- subset(yield_daymet_county, Year ==i)
+  df$weight <- df$Area/sum(df$Area)
+  for(j in 1:24){
+    yield_daymet_state[i-1998,j+4] <- weighted.mean(x = df[,j+5], w = df$weight)
+  }
+}
+yield_daymet_state
+```
+##Exploratory plots
+```{r}
+ggplot(yield_daymet_state, aes(x = Year, y = Yield)) + geom_point() + theme_bw() + geom_smooth(method = "lm") + ylab("Yield (tons/acre)") + ggtitle("State average Yield vs Year")
+
+```
+
+#Follow the methods applied by Lobell
+##Remove the impact of technology trends
+###Fit a linear trend to yield time series
+```{r}
+#county level 
+lm_tech <- lm(Yield~Year, data = yield_daymet_county)
+par(mfrow = c(1,1))
+#plot(lm_tech)
+summary(lm_tech) #R2 = 0.4982, p<2e-16
+yield_daymet_county$Yield_tech <- yield_daymet_county$Yield-predict(lm_tech, data = yield_daymet_county$Year)
+ggplot(yield_daymet_county, aes(x = Year, y = Yield_tech)) + geom_point(aes(color = County)) + theme_bw() + ylab("Technology-adjusted Yield") + geom_smooth(method = "loess")
+
+#state level
+lm_tech_state <- lm(Yield~Year, data =yield_daymet_state)
+summary(lm_tech_state)  #R2 = 0.8316
+yield_daymet_state$Yield_tech <- yield_daymet_state$Yield -  predict(lm_tech_state, data = yield_daymet_state$Year)
+ggplot(yield_daymet_state, aes(x = Year, y = Yield_tech)) + geom_point() + theme_bw() + ylab("Technology-adjusted Yield (tons/acre)") + geom_smooth(method = "loess")
+
+```
+
+
+##Univariable regression 
+###State level
+```{r}
+r2_lm2_yield_daymet_state <- data.frame("Variable"=names(yield_daymet_state)[5:28],"r2"=0,"p-value"=0)
+for(i in 1:24){
+  lm2_yield_daymet_state <- lm(yield_daymet_state$Yield_tech~yield_daymet_state[,i+4]+I(yield_daymet_state[,i+4]^2))
+  r2_lm2_yield_daymet_state[i,2] = summary(lm2_yield_daymet_state)$r.squared
+  r2_lm2_yield_daymet_state[i,3] = summary(lm2_yield_daymet_state)$coefficients[2,4]
+  
+}
+
+
+View(r2_lm2_yield_daymet_state)
+
+head(r2_lm2_yield_daymet_state)
+r2_lm2_yield_daymet_state$MaxMin <- as.factor(substr(as.character(r2_lm2_yield_daymet_state$Variable), start = 1, stop = 3))
+r2_lm2_yield_daymet_state$Month <- as.integer(sub('.*_','',r2_lm2_yield_daymet_state$Variable))
+
+```
+####Plots
+```{r}
+#R2 change
+ggplot(r2_lm2_yield_daymet_state, aes(x = Month, y = r2)) + geom_line(aes(linetype = MaxMin), size = 2)+ theme_bw() + ylim(0,0.5) + ylab("R2") + scale_x_continuous(breaks = 1:12) + theme(legend.title = element_blank()) + ggtitle("State-level detrend Yield vs Weather Variables")
+
+#Yield vs Weather
+ggplot(yield_daymet_state, aes(x =  MaxTemp_7, y = Yield_tech)) + geom_point() + theme_bw() + geom_smooth(method = "lm", formula = y~x+I(x^2), se = FALSE) + xlab("July Tmax")
+ggplot(yield_daymet_state, aes(x =  MaxTemp_4, y = Yield_tech)) + geom_point() + theme_bw() + geom_smooth(method = "lm", formula = y~x+I(x^2), se = FALSE) + xlab("April Tmax")
+ggplot(yield_daymet_state, aes(x =  MaxTemp_7, y = Yield_tech)) + geom_point(aes(color = Year)) + theme_bw() + geom_smooth(method = "lm", formula = y~x+I(x^2), se = FALSE) + xlab("July Tmax") + scale_color_continuous(type = "viridis")
+ggplot(yield_daymet_state, aes(x =  MaxTemp_4, y = Yield_tech)) + geom_point(aes(color = Year)) + theme_bw() + geom_smooth(method = "lm", formula = y~x+I(x^2), se = FALSE) + xlab("April Tmax") + scale_color_continuous(type = "viridis")
+ggplot(yield_daymet_state, aes(x =  MinTemp_10, y = Yield_tech)) + geom_point(aes(color = Year)) + theme_bw() + geom_smooth(method = "lm", formula = y~x+I(x^2), se = FALSE) + xlab("October Tmin") + scale_color_continuous(type = "viridis")
+
+
+#Yield-tech trend 
+p1 = ggplot(yield_daymet_state, aes(x =  Year, y = Yield_tech)) + geom_point()+theme_bw()+geom_smooth(method = "loess", se = FALSE) + ylab("detrended Yield")
+p2 = ggplot(yield_daymet_state, aes(x =  Year, y = MaxTemp_7)) + geom_point()+theme_bw()+geom_smooth(method = "loess", se = FALSE) + ylab("July Tmax")
+grid.arrange(p1,p2, nrow =2)
+
+p1 = ggplot(yield_daymet_state, aes(x =  Year, y = Yield_tech)) + geom_point()+theme_bw()+geom_smooth(method = "loess", se = FALSE) + ylab("detrended Yield")
+p2 = ggplot(yield_daymet_state, aes(x =  Year, y = MaxTemp_4)) + geom_point()+theme_bw()+geom_smooth(method = "loess", se = FALSE) + ylab("April Tmax")
+grid.arrange(p1,p2, nrow =2)
+
+p1 = ggplot(yield_daymet_state, aes(x =  Year, y = Yield_tech)) + geom_point()+theme_bw()+geom_smooth(method = "loess", se = FALSE) + ylab("detrended Yield")
+p2 = ggplot(yield_daymet_state, aes(x =  Year, y = MinTemp_10)) + geom_point()+theme_bw()+geom_smooth(method = "loess", se = FALSE) + ylab("October Tmin")
+grid.arrange(p1,p2, nrow =2)
+
+#Correlation 
+cor_yield_daymet_state_1 <- cor(x = yield_daymet_state[,5:16], y = yield_daymet_state[,17:28])
+corrplot(cor_yield_daymet_state_1)
+cor_yield_daymet_state_2 <- cor(x = yield_daymet_state[,5:16], y = yield_daymet_state[,5:16])
+corrplot.mixed(cor_yield_daymet_state_2)
+cor_yield_daymet_state <- cor(yield_daymet_state)
+```
+
+
+###County level 
+```{r}
+r2_lm2_yield_daymet <- data.frame("Variable"=names(yield_daymet)[5:28],"r2"=0,"p-value"=0)
+for(i in 1:24){
+  lm2_yield_daymet <- lm(yield_daymet$Yield_tech~yield_daymet[,i+4]+I(yield_daymet[,i+4]^2))
+  r2_lm2_yield_daymet[i,2] = summary(lm2_yield_daymet)$r.squared
+  r2_lm2_yield_daymet[i,3] = summary(lm2_yield_daymet)$coefficients[2,4]
+  
+}
+View(r2_lm2_yield_daymet)
+
+head(r2_lm2_yield_daymet)
+r2_lm2_yield_daymet$MaxMin <- as.factor(substr(as.character(r2_lm2_yield_daymet$Variable), start = 1, stop = 3))
+r2_lm2_yield_daymet$Month <- as.integer(sub('.*_','',r2_lm2_yield_daymet$Variable))
+
+
+```
+
+####Plots
+```{r}
+#R2 change
+ggplot(r2_lm2_yield_daymet, aes(x = Month, y = r2)) + geom_line(aes(linetype = MaxMin), size = 2)+ theme_bw() + ylim(0,0.5) + ylab("R2") + scale_x_continuous(breaks = 1:12) + theme(legend.title = element_blank()) + ggtitle("State-level detrend Yield vs Weather Variables")
+
+#Yield vs Weather
+ggplot(yield_daymet_county, aes(x =  MaxTemp_8, y = Yield_tech)) + geom_point(aes(color = Year)) + theme_bw() + geom_smooth(method = "lm", formula = y~x+I(x^2), se = FALSE) + xlab("August Tmax")+scale_color_continuous(type = "viridis")
+ggplot(yield_daymet_county, aes(x =  MinTemp_5, y = Yield_tech)) + geom_point(aes(color = Year)) + theme_bw() + geom_smooth(method = "lm", formula = y~x+I(x^2), se = FALSE) + xlab("May Tmin")+scale_color_continuous(type = "viridis")
+ggplot(yield_daymet_county, aes(x =  MinTemp_12, y = Yield_tech)) + geom_point(aes(color = Year)) + theme_bw() + geom_smooth(method = "lm", formula = y~x+I(x^2), se = FALSE) + xlab("December Tmin")+scale_color_continuous(type = "viridis")
+
+
+
+#Yield-tech trend 
+p1 = ggplot(yield_daymet_county, aes(x =  Year, y = Yield_tech)) + geom_point()+theme_bw()+geom_smooth(method = "loess", se = FALSE) + ylab("detrended Yield")
+p2 = ggplot(yield_daymet_county, aes(x =  Year, y = MaxTemp_7)) + geom_point()+theme_bw()+geom_smooth(method = "loess", se = FALSE) + ylab("July Tmax")
+grid.arrange(p1,p2, nrow =2)
+
+p1 = ggplot(yield_daymet_county, aes(x =  Year, y = Yield_tech)) + geom_point()+theme_bw()+geom_smooth(method = "loess", se = FALSE) + ylab("detrended Yield")
+p2 = ggplot(yield_daymet_county, aes(x =  Year, y = MaxTemp_4)) + geom_point()+theme_bw()+geom_smooth(method = "loess", se = FALSE) + ylab("April Tmax")
+grid.arrange(p1,p2, nrow =2)
+
+p1 = ggplot(yield_daymet_county, aes(x =  Year, y = Yield_tech)) + geom_point()+theme_bw()+geom_smooth(method = "loess", se = FALSE) + ylab("detrended Yield")
+p2 = ggplot(yield_daymet_county, aes(x =  Year, y = MinTemp_10)) + geom_point()+theme_bw()+geom_smooth(method = "loess", se = FALSE) + ylab("October Tmin")
+grid.arrange(p1,p2, nrow =2)
+
+#Correlation 
+cor_yield_daymet_1 <- cor(x = yield_daymet_county[,5:16], y = yield_daymet_county[,17:28])
+corrplot(cor_yield_daymet_1)
+cor_yield_daymet_2 <- cor(x = yield_daymet_county[,5:16], y = yield_daymet_county[,5:16])
+corrplot.mixed(cor_yield_daymet_2)
+cor_yield_daymet <- cor(yield_daymet_county)
+```
+
+##Multivariable regression 
+###State-level
+####Tmax_7 and Tmax_4
+```{r}
+lm_yield_tech_daymet_state <- lm(Yield_tech~MaxTemp_7+I(MaxTemp_7^2)+MaxTemp_4+I(MaxTemp_4^2), data = yield_daymet_state)
+summary(lm_yield_tech_daymet_state)
+plot(y = yield_daymet_state$Yield_tech, x = predict(lm_yield_tech_daymet_state, data = yield_daymet_state), xlab = "Predicted", ylab = "Observed", xlim = c(-7,4), ylim = c(-7,4))
+abline(a = 0, b =1)
+cor(y = yield_daymet_state$Yield_tech, x = predict(lm_yield_tech_daymet_state, data = yield_daymet_state))^2  #0.4265
+RMSE(pred = predict(lm_yield_tech_daymet_state, data = yield_daymet_state), obs = yield_daymet_state$Yield_tech)  #1.826
+```
+###County-level
+####Tmax_7 and Tmax_4
+```{r}
+lm_yield_tech_daymet_county <- lm(Yield_tech~MaxTemp_7+I(MaxTemp_7^2)+MaxTemp_4+I(MaxTemp_4^2), data = yield_daymet_county)
+summary(lm_yield_tech_daymet_county)
+plot(y = yield_daymet_county$Yield_tech, x = predict(lm_yield_tech_daymet_county, data = yield_daymet_county), xlab = "Predicted", ylab = "Observed", xlim = c(-7,4), ylim = c(-7,4))
+abline(a = 0, b =1)
+cor(y = yield_daymet_county$Yield_tech, x = predict(lm_yield_tech_daymet_county, data = yield_daymet_county))^2  #0.0993
+RMSE(pred = predict(lm_yield_tech_daymet_county, data = yield_daymet_county), obs = yield_daymet_county$Yield_tech)  #4.952
+
+
+lm_yield_daymet_county <- lm(Yield~MaxTemp_7+I(MaxTemp_7^2)+MaxTemp_4+I(MaxTemp_4^2), data = yield_daymet_county)
+summary(lm_yield_daymet_county)
+plot(y = yield_daymet_county$Yield, x = predict(lm_yield_daymet_county, data = yield_daymet_county), xlab = "Predicted", ylab = "Observed")
+abline(a = 0, b =1)
+cor(y = yield_daymet_county$Yield, x = predict(lm_yield_daymet_county, data = yield_daymet_county))^2  #0.0993
+RMSE(pred = predict(lm_yield_daymet_county, data = yield_daymet_county), obs = yield_daymet_county$Yield)  #4.952
+
+```
+####Tmax+8 and Tmin_5
+```{r}
+lm_yield_tech_daymet_county <- lm(Yield_tech~MaxTemp_8+I(MaxTemp_8^2)+MinTemp_5+I(MinTemp_5^2), data = yield_daymet_county)
+summary(lm_yield_tech_daymet_county)
+plot(y = yield_daymet_county$Yield_tech, x = predict(lm_yield_tech_daymet_county, data = yield_daymet_county), xlab = "Predicted", ylab = "Observed")
+abline(a = 0, b =1)
+cor(y = yield_daymet_county$Yield_tech, x = predict(lm_yield_tech_daymet_county, data = yield_daymet_county))^2  #0.170
+RMSE(pred = predict(lm_yield_tech_daymet_county, data = yield_daymet_county), obs = yield_daymet_county$Yield_tech)  #4.753
+
+lm_yield_daymet_county <- lm(Yield~MaxTemp_8+I(MaxTemp_8^2)+MinTemp_5+I(MinTemp_5^2), data = yield_daymet_county)
+summary(lm_yield_daymet_county)
+plot(y = yield_daymet_county$Yield, x = predict(lm_yield_daymet_county, data = yield_daymet_county), xlab = "Predicted", ylab = "Observed", xlim = c(25,65), ylim = c(25,65))
+abline(a = 0, b =1)
+cor(y = yield_daymet_county$Yield, x = predict(lm_yield_daymet_county, data = yield_daymet_county))^2  #0.170
+RMSE(pred = predict(lm_yield_daymet_county, data = yield_daymet_county), obs = yield_daymet_county$Yield)  #4.753
+
+```
+
+####Nonlinear regression 
+```{r}
+
+```
+#Within-Year variation 
+```{r}
+par(mfrow= c(1,1))
+r2_lm2_yield_daymet_year <- data.frame("Year"=rep(1999:2019, each = 24),"Variable"=rep(names(yield_daymet_state)[5:28],times = 21),"r2"=0,"p-value"=0,"n"=0)
+
+for(i in 1:21){
+  df <- subset(yield_daymet_county, Year == i+1998)
+  df_r2 <- subset(r2_lm2_yield_daymet_year, Year == i+1998)
+  n <- nrow(df)
+  for(j in 1:24){
+    lm1 <- lm(df$Yield_tech~df[,j+5]+I(df[,j+5]^2))
+    df_r2[j,3] <- summary(lm1)$r.squared
+    df_r2[j,4] <- summary(lm1)$coefficients[2,4]
+    df_r2[j,5] <- n
+  }
+  r2_lm2_yield_daymet_year[(1+24*(i-1)):(24+24*(i-1)),] <- df_r2
+}
+View(r2_lm2_yield_daymet_year)
+
+
+r2_lm2_yield_daymet_year$MaxMin <- as.factor(substr(as.character(r2_lm2_yield_daymet_year$Variable), start = 1, stop = 3))
+r2_lm2_yield_daymet_year$Month <- as.integer(sub('.*_','',r2_lm2_yield_daymet_year$Variable))
+
+ggplot(subset(r2_lm2_yield_daymet_year,Year!=2019), aes(x = Month, y = r2)) + geom_line(aes(linetype = MaxMin)) + theme_bw() + ylab("R2") + scale_x_continuous(breaks = 1:12) + theme(legend.title = element_blank())+facet_wrap(~Year)
+
+ggplot(r2_lm2_yield_daymet_state, aes(x = Month, y = r2)) + geom_line(aes(linetype = MaxMin), size = 2)+ theme_bw() + ylim(0,0.5) + ylab("R2") + scale_x_continuous(breaks = 1:12) + theme(legend.title = element_blank()) + ggtitle("State-level detrend Yield vs Weather Variables")
+
+
+
+
+```
+
+
+#Follow the methods applied by Zhou
+```{r}
+lm3 <- lm(Yield_tech~MaxTemp_7+I(MaxTemp_7^2)+MinTemp_4+I(MinTemp_4^2), data = yield_daymet_county)
+summary(lm3)
+
+lm4 <- lm(Yield_tech~MaxTemp_7+MinTemp_4^2, data = yield_daymet_county)
+summary(lm4)
+
+lm5 <- lm(Yield_tech~MaxTemp_7+I(MaxTemp_7^2), data = yield_daymet_county)
+summary(lm5)
+
+plot(x = yield_daymet_county$Yield_tech, y = yield_daymet_county$MaxTemp_7)
+abline(lm5)
+
+```
+
+#Area comparison 
+```{r}
+ggplot(yield_daymet_county, aes(x = Year, y = Area, color = County)) + geom_point() + geom_line() + theme_bw()
+```
+

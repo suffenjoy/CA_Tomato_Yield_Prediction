@@ -1,0 +1,5012 @@
+---
+title: "GEE_code"
+author: "Zhehan"
+date: "12/14/2020"
+output: html_document
+---
+
+#Field Boundary
+##NASS CDL
+```{r}
+var cdl_1997 = ee.Image('USDA/NASS/CDL/1997').select('cropland').clip(CA_state);
+var cdl_1998 = ee.Image('USDA/NASS/CDL/1998').select('cropland').clip(CA_state);
+var cdl_1999 = ee.Image('USDA/NASS/CDL/1999').select('cropland').clip(CA_state);
+var cdl_2000 = ee.Image('USDA/NASS/CDL/2000').select('cropland').clip(CA_state);
+var cdl_2001 = ee.Image('USDA/NASS/CDL/2001').select('cropland').clip(CA_state);
+var cdl_2002 = ee.Image('USDA/NASS/CDL/2002').select('cropland').clip(CA_state);
+var cdl_2003 = ee.Image('USDA/NASS/CDL/2003').select('cropland').clip(CA_state);
+var cdl_2004 = ee.Image('USDA/NASS/CDL/2004').select('cropland').clip(CA_state);
+var cdl_2005 = ee.Image('USDA/NASS/CDL/2005').select('cropland').clip(CA_state);
+var cdl_2006 = ee.Image('USDA/NASS/CDL/2006').select('cropland').clip(CA_state);
+var cdl_2007 = ee.Image('USDA/NASS/CDL/2007').select('cropland').clip(CA_state);
+var cdl_2008 = ee.Image('USDA/NASS/CDL/2008').select('cropland').clip(CA_state);
+var cdl_2009 = ee.Image('USDA/NASS/CDL/2009').select('cropland').clip(CA_state);
+var cdl_2010 = ee.Image('USDA/NASS/CDL/2010').select('cropland').clip(CA_state);
+var cdl_2011 = ee.Image('USDA/NASS/CDL/2011').select('cropland').clip(CA_state);
+var cdl_2012 = ee.Image('USDA/NASS/CDL/2012').select('cropland').clip(CA_state);
+var cdl_2013 = ee.Image('USDA/NASS/CDL/2013').select('cropland').clip(CA_state);
+var cdl_2014 = ee.Image('USDA/NASS/CDL/2014').select('cropland').clip(CA_state);
+var cdl_2015 = ee.Image('USDA/NASS/CDL/2015').select('cropland').clip(CA_state);
+var cdl_2016 = ee.Image('USDA/NASS/CDL/2016').select('cropland').clip(CA_state);
+var cdl_2017 = ee.Image('USDA/NASS/CDL/2017').select('cropland').clip(CA_state);
+var cdl_2018 = ee.Image('USDA/NASS/CDL/2018').select('cropland').clip(CA_state);
+var cdl_2019 = ee.Image('USDA/NASS/CDL/2019').select('cropland').clip(CA_state);
+
+```
+##Tomato only
+```{r}
+var tomato_1997 = cdl_1997.updateMask(cdl_1997.eq(54));
+var tomato_1998 = cdl_1998.updateMask(cdl_1998.eq(54));
+var tomato_1999 = cdl_1999.updateMask(cdl_1999.eq(54));
+var tomato_2000 = cdl_2000.updateMask(cdl_2000.eq(54));
+var tomato_2001 = cdl_2001.updateMask(cdl_2001.eq(54));
+var tomato_2002 = cdl_2002.updateMask(cdl_2002.eq(54));
+var tomato_2003 = cdl_2003.updateMask(cdl_2003.eq(54));
+var tomato_2004 = cdl_2004.updateMask(cdl_2004.eq(54));
+var tomato_2005 = cdl_2005.updateMask(cdl_2005.eq(54));
+var tomato_2006 = cdl_2006.updateMask(cdl_2006.eq(54));
+var tomato_2007 = cdl_2007.updateMask(cdl_2007.eq(54));
+var tomato_2008 = cdl_2008.updateMask(cdl_2008.eq(54));
+var tomato_2009 = cdl_2009.updateMask(cdl_2009.eq(54));
+var tomato_2010 = cdl_2010.updateMask(cdl_2010.eq(54));
+var tomato_2011 = cdl_2011.updateMask(cdl_2011.eq(54));
+var tomato_2012 = cdl_2012.updateMask(cdl_2012.eq(54));
+var tomato_2013 = cdl_2013.updateMask(cdl_2013.eq(54));
+var tomato_2014 = cdl_2013.updateMask(cdl_2014.eq(54));
+var tomato_2015 = cdl_2013.updateMask(cdl_2015.eq(54));
+var tomato_2016 = cdl_2013.updateMask(cdl_2016.eq(54));
+var tomato_2017 = cdl_2013.updateMask(cdl_2017.eq(54));
+var tomato_2018 = cdl_2013.updateMask(cdl_2018.eq(54));
+var tomato_2019 = cdl_2013.updateMask(cdl_2019.eq(54));
+
+```
+##Apply to each year
+```{r}
+var tomato_fidbound_1997 = tomato_field(tomato_1997);
+print('1997', tomato_fidbound_1997.size());
+var tomato_fidbound_1998 = tomato_field(tomato_1998);
+print('1998', tomato_fidbound_1998.size());
+var tomato_fidbound_1999 = tomato_field(tomato_1999);
+print('1999', tomato_fidbound_1999.size());
+var tomato_fidbound_2000 = tomato_field(tomato_2000);
+print('2000', tomato_fidbound_2000.size());
+var tomato_fidbound_2001 = tomato_field(tomato_2001);
+print('2001', tomato_fidbound_2001.size());
+var tomato_fidbound_2002 = tomato_field(tomato_2002);
+print('2002', tomato_fidbound_2002.size());
+var tomato_fidbound_2003 = tomato_field(tomato_2003);
+print('2003', tomato_fidbound_2003.size());
+var tomato_fidbound_2004 = tomato_field(tomato_2004);
+print('2004', tomato_fidbound_2004.size());
+var tomato_fidbound_2005 = tomato_field(tomato_2005);
+print('2005', tomato_fidbound_2005.size());
+var tomato_fidbound_2006 = tomato_field(tomato_2006);
+print('2006', tomato_fidbound_2006.size());
+var tomato_fidbound_2007 = tomato_field(tomato_2007);
+print('2007', tomato_fidbound_2007.size());
+var tomato_fidbound_2008 = tomato_field(tomato_2008);
+print('2008', tomato_fidbound_2008.size());
+var tomato_fidbound_2009 = tomato_field(tomato_2009);
+print('2009', tomato_fidbound_2009.size());
+var tomato_fidbound_2010 = tomato_field(tomato_2010);
+print('2010', tomato_fidbound_2010.size());
+var tomato_fidbound_2011 = tomato_field(tomato_2011);
+print('2011', tomato_fidbound_2011.size());
+var tomato_fidbound_2012 = tomato_field(tomato_2012);
+print('2012', tomato_fidbound_2012.size());
+var tomato_fidbound_2013 = tomato_field(tomato_2013);
+print('2013', tomato_fidbound_2013.size());
+var tomato_fidbound_2014 = tomato_field(tomato_2014);
+print('2014', tomato_fidbound_2014.size());
+var tomato_fidbound_2015 = tomato_field(tomato_2015);
+print('2015', tomato_fidbound_2015.size());
+var tomato_fidbound_2016 = tomato_field(tomato_2016);
+print('2016', tomato_fidbound_2016.size());
+var tomato_fidbound_2017 = tomato_field(tomato_2017);
+print('2017', tomato_fidbound_2017.size());
+var tomato_fidbound_2018 = tomato_field(tomato_2018);
+print('2018', tomato_fidbound_2018.size());
+var tomato_fidbound_2019 = tomato_field(tomato_2019);
+print('2019', tomato_fidbound_2018.size());
+
+```
+##Export
+```{r}
+Export.table.toDrive({
+  collection: tomato_fidbound_1997,
+  description: 'tomato_fidbound_1997',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_1998,
+  description: 'tomato_fidbound_1998',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_1999,
+  description: 'tomato_fidbound_1999',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2000,
+  description: 'tomato_fidbound_2000',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2001,
+  description: 'tomato_fidbound_2001',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2002,
+  description: 'tomato_fidbound_2002',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2003,
+  description: 'tomato_fidbound_2003',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2004,
+  description: 'tomato_fidbound_2004',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2005,
+  description: 'tomato_fidbound_2005',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2006,
+  description: 'tomato_fidbound_2006',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2007,
+  description: 'tomato_fidbound_2007',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2008,
+  description: 'tomato_fidbound_2008',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2009,
+  description: 'tomato_fidbound_2009',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2010,
+  description: 'tomato_fidbound_2010',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2011,
+  description: 'tomato_fidbound_2011',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2012,
+  description: 'tomato_fidbound_2012',
+  fileFormat: 'KML'
+});
+
+Export.table.toDrive({
+  collection: tomato_fidbound_2013,
+  description: 'tomato_fidbound_2013',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2014,
+  description: 'tomato_fidbound_2014',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2015,
+  description: 'tomato_fidbound_2015',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2016,
+  description: 'tomato_fidbound_2016',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2017,
+  description: 'tomato_fidbound_2017',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2018,
+  description: 'tomato_fidbound_2018',
+  fileFormat: 'KML'
+});
+Export.table.toDrive({
+  collection: tomato_fidbound_2019,
+  description: 'tomato_fidbound_2019',
+  fileFormat: 'KML'
+});
+
+```
+
+#Landsat 8
+##Time series
+```{r}
+
+```
+##Extraction
+```{r}
+
+```
+
+#Landsat 7
+##Dataset 
+```{r}
+var L7sr_1999 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('1999-01-01', '1999-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2000 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2000-01-01', '2000-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2001 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2001-01-01', '2001-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2002 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2002-01-01', '2002-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2003 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2003-01-01', '2003-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2004 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2004-01-01', '2004-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2005 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2005-01-01', '2005-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2006 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2006-01-01', '2006-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2007 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2007-01-01', '2007-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2008 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2008-01-01', '2008-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2009 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2009-01-01', '2009-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2010 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2010-01-01', '2010-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2011 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2011-01-01', '2011-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2012 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2012-01-01', '2012-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2013 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2013-01-01', '2013-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2014 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2014-01-01', '2014-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2015 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2015-01-01', '2015-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2016 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2016-01-01', '2016-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2017 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2017-01-01', '2017-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2018 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2018-01-01', '2018-12-31').filterBounds(CA).map(cloudMaskL457);
+var L7sr_2019 = ee.ImageCollection('LANDSAT/LE07/C01/T1_SR').filterDate('2019-01-01', '2019-12-31').filterBounds(CA).map(cloudMaskL457);
+
+```
+##Extraction and export 
+###1999
+```{r}
+var L7_B1_1999 = L7sr_1999.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_1999,
+  description: 'L7_B1_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_1999 = L7sr_1999.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_1999,
+  description: 'L7_B2_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_1999 = L7sr_1999.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_1999,
+  description: 'L7_B3_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_1999 = L7sr_1999.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_1999,
+  description: 'L7_B4_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_1999 = L7sr_1999.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_1999,
+  description: 'L7_B5_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_1999 = L7sr_1999.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_1999,
+  description: 'L7_B6_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_1999 = L7sr_1999.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_1999,
+  description: 'L7_B7_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2000
+```{r}
+var L7_B1_2000 = L7sr_2000.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2000,
+  description: 'L7_B1_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2000 = L7sr_2000.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2000,
+  description: 'L7_B2_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2000 = L7sr_2000.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2000,
+  description: 'L7_B3_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2000 = L7sr_2000.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2000,
+  description: 'L7_B4_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2000 = L7sr_2000.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2000,
+  description: 'L7_B5_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2000 = L7sr_2000.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2000,
+  description: 'L7_B6_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2000 = L7sr_2000.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2000,
+  description: 'L7_B7_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2001
+```{r}
+var L7_B1_2001 = L7sr_2001.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2001,
+  description: 'L7_B1_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2001 = L7sr_2001.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2001,
+  description: 'L7_B2_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2001 = L7sr_2001.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2001,
+  description: 'L7_B3_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2001 = L7sr_2001.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2001,
+  description: 'L7_B4_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2001 = L7sr_2001.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2001,
+  description: 'L7_B5_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2001 = L7sr_2001.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2001,
+  description: 'L7_B6_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2001 = L7sr_2001.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2001,
+  description: 'L7_B7_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2002
+```{r}
+var L7_B1_2002 = L7sr_2002.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2002,
+  description: 'L7_B1_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2002 = L7sr_2002.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2002,
+  description: 'L7_B2_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2002 = L7sr_2002.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2002,
+  description: 'L7_B3_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2002 = L7sr_2002.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2002,
+  description: 'L7_B4_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2002 = L7sr_2002.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2002,
+  description: 'L7_B5_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2002 = L7sr_2002.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2002,
+  description: 'L7_B6_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2002 = L7sr_2002.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2002,
+  description: 'L7_B7_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2003
+```{r}
+var L7_B1_2003 = L7sr_2003.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2003,
+  description: 'L7_B1_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2003 = L7sr_2003.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2003,
+  description: 'L7_B2_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2003 = L7sr_2003.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2003,
+  description: 'L7_B3_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2003 = L7sr_2003.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2003,
+  description: 'L7_B4_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2003 = L7sr_2003.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2003,
+  description: 'L7_B5_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2003 = L7sr_2003.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2003,
+  description: 'L7_B6_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2003 = L7sr_2003.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2003,
+  description: 'L7_B7_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2004
+```{r}
+var L7_B1_2004 = L7sr_2004.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2004,
+  description: 'L7_B1_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2004 = L7sr_2004.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2004,
+  description: 'L7_B2_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2004 = L7sr_2004.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2004,
+  description: 'L7_B3_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2004 = L7sr_2004.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2004,
+  description: 'L7_B4_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2004 = L7sr_2004.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2004,
+  description: 'L7_B5_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2004 = L7sr_2004.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2004,
+  description: 'L7_B6_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2004 = L7sr_2004.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2004,
+  description: 'L7_B7_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2005
+```{r}
+var L7_B1_2005 = L7sr_2005.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2005,
+  description: 'L7_B1_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2005 = L7sr_2005.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2005,
+  description: 'L7_B2_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2005 = L7sr_2005.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2005,
+  description: 'L7_B3_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2005 = L7sr_2005.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2005,
+  description: 'L7_B4_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2005 = L7sr_2005.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2005,
+  description: 'L7_B5_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2005 = L7sr_2005.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2005,
+  description: 'L7_B6_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2005 = L7sr_2005.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2005,
+  description: 'L7_B7_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2006
+```{r}
+var L7_B1_2006 = L7sr_2006.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2006,
+  description: 'L7_B1_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2006 = L7sr_2006.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2006,
+  description: 'L7_B2_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2006 = L7sr_2006.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2006,
+  description: 'L7_B3_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2006 = L7sr_2006.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2006,
+  description: 'L7_B4_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2006 = L7sr_2006.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2006,
+  description: 'L7_B5_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2006 = L7sr_2006.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2006,
+  description: 'L7_B6_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2006 = L7sr_2006.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2006,
+  description: 'L7_B7_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2007
+```{r}
+var L7_B1_2007 = L7sr_2007.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2007,
+  description: 'L7_B1_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2007 = L7sr_2007.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2007,
+  description: 'L7_B2_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2007 = L7sr_2007.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2007,
+  description: 'L7_B3_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2007 = L7sr_2007.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2007,
+  description: 'L7_B4_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2007 = L7sr_2007.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2007,
+  description: 'L7_B5_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2007 = L7sr_2007.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2007,
+  description: 'L7_B6_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2007 = L7sr_2007.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2007,
+  description: 'L7_B7_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2008
+```{r}
+var L7_B1_2008 = L7sr_2008.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2008,
+  description: 'L7_B1_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2008 = L7sr_2008.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2008,
+  description: 'L7_B2_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2008 = L7sr_2008.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2008,
+  description: 'L7_B3_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2008 = L7sr_2008.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2008,
+  description: 'L7_B4_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2008 = L7sr_2008.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2008,
+  description: 'L7_B5_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2008 = L7sr_2008.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2008,
+  description: 'L7_B6_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2008 = L7sr_2008.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2008,
+  description: 'L7_B7_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+
+###2009
+```{r}
+var L7_B1_2009 = L7sr_2009.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2009,
+  description: 'L7_B1_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2009 = L7sr_2009.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2009,
+  description: 'L7_B2_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2009 = L7sr_2009.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2009,
+  description: 'L7_B3_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2009 = L7sr_2009.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2009,
+  description: 'L7_B4_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2009 = L7sr_2009.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2009,
+  description: 'L7_B5_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2009 = L7sr_2009.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2009,
+  description: 'L7_B6_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2009 = L7sr_2009.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2009,
+  description: 'L7_B7_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2010
+```{r}
+var L7_B1_2010 = L7sr_2010.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2010,
+  description: 'L7_B1_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2010 = L7sr_2010.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2010,
+  description: 'L7_B2_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2010 = L7sr_2010.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2010,
+  description: 'L7_B3_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2010 = L7sr_2010.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2010,
+  description: 'L7_B4_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2010 = L7sr_2010.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2010,
+  description: 'L7_B5_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2010 = L7sr_2010.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2010,
+  description: 'L7_B6_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2010 = L7sr_2010.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2010,
+  description: 'L7_B7_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2011
+```{r}
+var L7_B1_2011 = L7sr_2011.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2011,
+  description: 'L7_B1_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2011 = L7sr_2011.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2011,
+  description: 'L7_B2_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2011 = L7sr_2011.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2011,
+  description: 'L7_B3_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2011 = L7sr_2011.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2011,
+  description: 'L7_B4_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2011 = L7sr_2011.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2011,
+  description: 'L7_B5_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2011 = L7sr_2011.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2011,
+  description: 'L7_B6_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2011 = L7sr_2011.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2011,
+  description: 'L7_B7_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2012
+```{r}
+var L7_B1_2012 = L7sr_2012.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2012, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2012,
+  description: 'L7_B1_2012',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2012 = L7sr_2012.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2012, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2012,
+  description: 'L7_B2_2012',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2012 = L7sr_2012.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2012, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2012,
+  description: 'L7_B3_2012',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2012 = L7sr_2012.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2012, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2012,
+  description: 'L7_B4_2012',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2012 = L7sr_2012.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2012, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2012,
+  description: 'L7_B5_2012',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2012 = L7sr_2012.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2012, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2012,
+  description: 'L7_B6_2012',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2012 = L7sr_2012.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2012, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2012,
+  description: 'L7_B7_2012',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2013
+```{r}
+var L7_B1_2013 = L7sr_2013.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2013, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2013,
+  description: 'L7_B1_2013',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2013 = L7sr_2013.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2013, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2013,
+  description: 'L7_B2_2013',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2013 = L7sr_2013.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2013, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2013,
+  description: 'L7_B3_2013',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2013 = L7sr_2013.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2013, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2013,
+  description: 'L7_B4_2013',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2013 = L7sr_2013.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2013, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2013,
+  description: 'L7_B5_2013',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2013 = L7sr_2013.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2013, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2013,
+  description: 'L7_B6_2013',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2013 = L7sr_2013.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2013, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2013,
+  description: 'L7_B7_2013',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2014
+```{r}
+var L7_B1_2014 = L7sr_2014.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2014, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2014,
+  description: 'L7_B1_2014',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2014 = L7sr_2014.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2014, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2014,
+  description: 'L7_B2_2014',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2014 = L7sr_2014.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2014, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2014,
+  description: 'L7_B3_2014',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2014 = L7sr_2014.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2014, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2014,
+  description: 'L7_B4_2014',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2014 = L7sr_2014.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2014, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2014,
+  description: 'L7_B5_2014',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2014 = L7sr_2014.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2014, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2014,
+  description: 'L7_B6_2014',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2014 = L7sr_2014.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2014, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2014,
+  description: 'L7_B7_2014',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2015
+```{r}
+var L7_B1_2015 = L7sr_2015.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2015, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2015,
+  description: 'L7_B1_2015',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2015 = L7sr_2015.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2015, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2015,
+  description: 'L7_B2_2015',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2015 = L7sr_2015.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2015, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2015,
+  description: 'L7_B3_2015',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2015 = L7sr_2015.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2015, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2015,
+  description: 'L7_B4_2015',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2015 = L7sr_2015.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2015, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2015,
+  description: 'L7_B5_2015',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2015 = L7sr_2015.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2015, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2015,
+  description: 'L7_B6_2015',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2015 = L7sr_2015.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2015, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2015,
+  description: 'L7_B7_2015',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2016
+```{r}
+var L7_B1_2016 = L7sr_2016.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2016, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2016,
+  description: 'L7_B1_2016',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2016 = L7sr_2016.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2016, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2016,
+  description: 'L7_B2_2016',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2016 = L7sr_2016.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2016, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2016,
+  description: 'L7_B3_2016',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2016 = L7sr_2016.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2016, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2016,
+  description: 'L7_B4_2016',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2016 = L7sr_2016.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2016, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2016,
+  description: 'L7_B5_2016',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2016 = L7sr_2016.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2016, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2016,
+  description: 'L7_B6_2016',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2016 = L7sr_2016.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2016, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2016,
+  description: 'L7_B7_2016',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2017
+```{r}
+var L7_B1_2017 = L7sr_2017.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2017, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2017,
+  description: 'L7_B1_2017',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2017 = L7sr_2017.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2017, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2017,
+  description: 'L7_B2_2017',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2017 = L7sr_2017.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2017, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2017,
+  description: 'L7_B3_2017',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2017 = L7sr_2017.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2017, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2017,
+  description: 'L7_B4_2017',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2017 = L7sr_2017.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2017, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2017,
+  description: 'L7_B5_2017',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2017 = L7sr_2017.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2017, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2017,
+  description: 'L7_B6_2017',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2017 = L7sr_2017.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2017, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2017,
+  description: 'L7_B7_2017',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2018
+```{r}
+var L7_B1_2018 = L7sr_2018.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2018, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2018,
+  description: 'L7_B1_2018',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2018 = L7sr_2018.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2018, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2018,
+  description: 'L7_B2_2018',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2018 = L7sr_2018.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2018, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2018,
+  description: 'L7_B3_2018',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2018 = L7sr_2018.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2018, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2018,
+  description: 'L7_B4_2018',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2018 = L7sr_2018.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2018, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2018,
+  description: 'L7_B5_2018',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2018 = L7sr_2018.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2018, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2018,
+  description: 'L7_B6_2018',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2018 = L7sr_2018.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2018, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2018,
+  description: 'L7_B7_2018',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2019
+```{r}
+var L7_B1_2019 = L7sr_2019.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2019, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B1_2019,
+  description: 'L7_B1_2019',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B2_2019 = L7sr_2019.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2019, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B2_2019,
+  description: 'L7_B2_2019',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B3_2019 = L7sr_2019.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2019, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B3_2019,
+  description: 'L7_B3_2019',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B4_2019 = L7sr_2019.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2019, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B4_2019,
+  description: 'L7_B4_2019',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B5_2019 = L7sr_2019.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2019, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B5_2019,
+  description: 'L7_B5_2019',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B6_2019 = L7sr_2019.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2019, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B6_2019,
+  description: 'L7_B6_2019',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L7_B7_2019 = L7sr_2019.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2019, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L7_B7_2019,
+  description: 'L7_B7_2019',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+
+
+
+#Landsat 5
+##Dataset
+```{r}
+var L5sr_1997 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('1997-01-01', '1997-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_1998 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('1998-01-01', '1998-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_1999 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('1999-01-01', '1999-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_2000 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('2000-01-01', '2000-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_2001 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('2001-01-01', '2001-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_2002 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('2002-01-01', '2002-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_2003 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('2003-01-01', '2003-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_2004 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('2004-01-01', '2004-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_2005 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('2005-01-01', '2005-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_2006 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('2006-01-01', '2006-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_2007 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('2007-01-01', '2007-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_2008 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('2008-01-01', '2008-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_2009 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('2009-01-01', '2009-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_2010 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('2010-01-01', '2010-12-31').filterBounds(CA).map(cloudMaskL457);
+var L5sr_2011 = ee.ImageCollection('LANDSAT/LT05/C01/T1_SR').filterDate('2011-01-01', '2011-12-31').filterBounds(CA).map(cloudMaskL457);
+
+```
+##Extraction and export 
+###1997
+```{r}
+var L5_B1_1997 = L5sr_1997.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_1997, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_1997,
+  description: 'L5_B1_1997',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_1997 = L5sr_1997.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_1997, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_1997,
+  description: 'L5_B2_1997',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_1997 = L5sr_1997.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_1997, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_1997,
+  description: 'L5_B3_1997',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_1997 = L5sr_1997.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_1997, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_1997,
+  description: 'L5_B4_1997',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_1997 = L5sr_1997.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_1997, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_1997,
+  description: 'L5_B5_1997',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_1997 = L5sr_1997.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_1997, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_1997,
+  description: 'L5_B6_1997',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_1997 = L5sr_1997.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_1997, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_1997,
+  description: 'L5_B7_1997',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###1998
+```{r}
+var L5_B1_1998 = L5sr_1998.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_1998, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_1998,
+  description: 'L5_B1_1998',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_1998 = L5sr_1998.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_1998, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_1998,
+  description: 'L5_B2_1998',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_1998 = L5sr_1998.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_1998, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_1998,
+  description: 'L5_B3_1998',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_1998 = L5sr_1998.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_1998, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_1998,
+  description: 'L5_B4_1998',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_1998 = L5sr_1998.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_1998, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_1998,
+  description: 'L5_B5_1998',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_1998 = L5sr_1998.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_1998, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_1998,
+  description: 'L5_B6_1998',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_1998 = L5sr_1998.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_1998, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_1998,
+  description: 'L5_B7_1998',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###1999
+```{r}
+var L5_B1_1999 = L5sr_1999.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_1999,
+  description: 'L5_B1_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_1999 = L5sr_1999.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_1999,
+  description: 'L5_B2_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_1999 = L5sr_1999.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_1999,
+  description: 'L5_B3_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_1999 = L5sr_1999.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_1999,
+  description: 'L5_B4_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_1999 = L5sr_1999.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_1999,
+  description: 'L5_B5_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_1999 = L5sr_1999.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_1999,
+  description: 'L5_B6_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_1999 = L5sr_1999.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_1999, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_1999,
+  description: 'L5_B7_1999',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2000
+```{r}
+var L5_B1_2000 = L5sr_2000.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_2000,
+  description: 'L5_B1_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_2000 = L5sr_2000.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_2000,
+  description: 'L5_B2_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_2000 = L5sr_2000.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_2000,
+  description: 'L5_B3_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_2000 = L5sr_2000.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_2000,
+  description: 'L5_B4_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_2000 = L5sr_2000.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_2000,
+  description: 'L5_B5_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_2000 = L5sr_2000.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_2000,
+  description: 'L5_B6_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_2000 = L5sr_2000.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2000, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_2000,
+  description: 'L5_B7_2000',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2001
+```{r}
+var L5_B1_2001 = L5sr_2001.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_2001,
+  description: 'L5_B1_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_2001 = L5sr_2001.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_2001,
+  description: 'L5_B2_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_2001 = L5sr_2001.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_2001,
+  description: 'L5_B3_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_2001 = L5sr_2001.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_2001,
+  description: 'L5_B4_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_2001 = L5sr_2001.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_2001,
+  description: 'L5_B5_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_2001 = L5sr_2001.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_2001,
+  description: 'L5_B6_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_2001 = L5sr_2001.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2001, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_2001,
+  description: 'L5_B7_2001',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2002
+```{r}
+var L5_B1_2002 = L5sr_2002.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_2002,
+  description: 'L5_B1_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_2002 = L5sr_2002.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_2002,
+  description: 'L5_B2_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_2002 = L5sr_2002.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_2002,
+  description: 'L5_B3_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_2002 = L5sr_2002.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_2002,
+  description: 'L5_B4_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_2002 = L5sr_2002.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_2002,
+  description: 'L5_B5_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_2002 = L5sr_2002.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_2002,
+  description: 'L5_B6_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_2002 = L5sr_2002.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2002, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_2002,
+  description: 'L5_B7_2002',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2003
+```{r}
+var L5_B1_2003 = L5sr_2003.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_2003,
+  description: 'L5_B1_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_2003 = L5sr_2003.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_2003,
+  description: 'L5_B2_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_2003 = L5sr_2003.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_2003,
+  description: 'L5_B3_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_2003 = L5sr_2003.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_2003,
+  description: 'L5_B4_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_2003 = L5sr_2003.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_2003,
+  description: 'L5_B5_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_2003 = L5sr_2003.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_2003,
+  description: 'L5_B6_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_2003 = L5sr_2003.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2003, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_2003,
+  description: 'L5_B7_2003',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2004
+```{r}
+var L5_B1_2004 = L5sr_2004.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_2004,
+  description: 'L5_B1_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_2004 = L5sr_2004.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_2004,
+  description: 'L5_B2_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_2004 = L5sr_2004.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_2004,
+  description: 'L5_B3_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_2004 = L5sr_2004.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_2004,
+  description: 'L5_B4_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_2004 = L5sr_2004.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_2004,
+  description: 'L5_B5_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_2004 = L5sr_2004.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_2004,
+  description: 'L5_B6_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_2004 = L5sr_2004.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2004, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_2004,
+  description: 'L5_B7_2004',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2005
+```{r}
+var L5_B1_2005 = L5sr_2005.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_2005,
+  description: 'L5_B1_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_2005 = L5sr_2005.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_2005,
+  description: 'L5_B2_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_2005 = L5sr_2005.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_2005,
+  description: 'L5_B3_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_2005 = L5sr_2005.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_2005,
+  description: 'L5_B4_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_2005 = L5sr_2005.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_2005,
+  description: 'L5_B5_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_2005 = L5sr_2005.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_2005,
+  description: 'L5_B6_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_2005 = L5sr_2005.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2005, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_2005,
+  description: 'L5_B7_2005',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2006
+```{r}
+var L5_B1_2006 = L5sr_2006.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_2006,
+  description: 'L5_B1_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_2006 = L5sr_2006.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_2006,
+  description: 'L5_B2_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_2006 = L5sr_2006.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_2006,
+  description: 'L5_B3_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_2006 = L5sr_2006.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_2006,
+  description: 'L5_B4_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_2006 = L5sr_2006.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_2006,
+  description: 'L5_B5_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_2006 = L5sr_2006.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_2006,
+  description: 'L5_B6_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_2006 = L5sr_2006.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2006, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_2006,
+  description: 'L5_B7_2006',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2007
+```{r}
+var L5_B1_2007 = L5sr_2007.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_2007,
+  description: 'L5_B1_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_2007 = L5sr_2007.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_2007,
+  description: 'L5_B2_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_2007 = L5sr_2007.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_2007,
+  description: 'L5_B3_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_2007 = L5sr_2007.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_2007,
+  description: 'L5_B4_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_2007 = L5sr_2007.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_2007,
+  description: 'L5_B5_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_2007 = L5sr_2007.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_2007,
+  description: 'L5_B6_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_2007 = L5sr_2007.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2007, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_2007,
+  description: 'L5_B7_2007',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2008
+```{r}
+var L5_B1_2008 = L5sr_2008.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_2008,
+  description: 'L5_B1_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_2008 = L5sr_2008.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_2008,
+  description: 'L5_B2_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_2008 = L5sr_2008.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_2008,
+  description: 'L5_B3_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_2008 = L5sr_2008.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_2008,
+  description: 'L5_B4_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_2008 = L5sr_2008.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_2008,
+  description: 'L5_B5_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_2008 = L5sr_2008.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_2008,
+  description: 'L5_B6_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_2008 = L5sr_2008.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2008, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_2008,
+  description: 'L5_B7_2008',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2009
+```{r}
+var L5_B1_2009 = L5sr_2009.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_2009,
+  description: 'L5_B1_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_2009 = L5sr_2009.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_2009,
+  description: 'L5_B2_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_2009 = L5sr_2009.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_2009,
+  description: 'L5_B3_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_2009 = L5sr_2009.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_2009,
+  description: 'L5_B4_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_2009 = L5sr_2009.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_2009,
+  description: 'L5_B5_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_2009 = L5sr_2009.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_2009,
+  description: 'L5_B6_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_2009 = L5sr_2009.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2009, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_2009,
+  description: 'L5_B7_2009',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2010
+```{r}
+var L5_B1_2010 = L5sr_2010.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_2010,
+  description: 'L5_B1_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_2010 = L5sr_2010.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_2010,
+  description: 'L5_B2_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_2010 = L5sr_2010.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_2010,
+  description: 'L5_B3_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_2010 = L5sr_2010.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_2010,
+  description: 'L5_B4_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_2010 = L5sr_2010.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_2010,
+  description: 'L5_B5_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_2010 = L5sr_2010.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_2010,
+  description: 'L5_B6_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_2010 = L5sr_2010.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2010, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_2010,
+  description: 'L5_B7_2010',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+###2011
+```{r}
+var L5_B1_2011 = L5sr_2011.map(function(image) {
+  return image.select('B1').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B1_2011,
+  description: 'L5_B1_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B2_2011 = L5sr_2011.map(function(image) {
+  return image.select('B2').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B2_2011,
+  description: 'L5_B2_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B3_2011 = L5sr_2011.map(function(image) {
+  return image.select('B3').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B3_2011,
+  description: 'L5_B3_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B4_2011 = L5sr_2011.map(function(image) {
+  return image.select('B4').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B4_2011,
+  description: 'L5_B4_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B5_2011 = L5sr_2011.map(function(image) {
+  return image.select('B5').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B5_2011,
+  description: 'L5_B5_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B6_2011 = L5sr_2011.map(function(image) {
+  return image.select('B6').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B6_2011,
+  description: 'L5_B6_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+var L5_B7_2011 = L5sr_2011.map(function(image) {
+  return image.select('B7').reduceRegions({
+    collection: tomato_fidbound_2011, 
+    reducer: ee.Reducer.mean(), 
+    scale: 30
+  }).filter(ee.Filter.neq('mean', null))
+    .map(function(f) { 
+      return f.set('imageId', image.id());
+    });
+}).flatten();
+// Export the FeatureCollection.
+Export.table.toDrive({
+  collection: L5_B7_2011,
+  description: 'L5_B7_2011',
+  folder: 'earth_engine_output',
+  fileFormat: 'CSV'
+});
+
+
+
+```
+

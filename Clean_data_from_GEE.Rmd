@@ -1,0 +1,94 @@
+---
+title: "Clean_data_from_GEE"
+author: "Zhehan"
+date: "12/19/2020"
+output: html_document
+---
+
+#Packages
+```{r}
+library(raster)
+library(rgeos)
+library(rgdal)
+library(sp)
+library(qdapRegex)
+library(lubridate)
+library(tidyr)
+library(phenofit)
+library(ggpubr)
+library(readxl)
+library(ggplot2)
+```
+
+#convert KML to shapefiles
+```{r}
+path_kml <- "D:/Tomato_Phenology_RemoteSensing/GEE_output/Field_Boundary"
+kml_list <- list.files(path_kml, pattern = ".kml", full.names = TRUE)
+names_kml <- list.files(path_kml, pattern = ".kml")
+names_kml <- gsub(pattern = ".kml", replacement = "", names_kml)
+names_kml
+#change to shapefiles
+path_shp <- "D:/Tomato_Phenology_RemoteSensing/Shapefiles"
+for(i in 1:length(kml_list)){
+  shp <- rgdal::readOGR(dsn = kml_list[i], require_geomType = "wkbPolygon")
+  shapefile(shp, file.path(path_shp, paste0(names_kml[i],".shp")))
+}
+
+
+```
+
+#Read the shapefiles back
+```{r}
+path_shp_box <- "C:/Users/tangz/Box Sync/Tomato_Phenology_RemoteSensing/Shapefiles"
+CA_counties <- shapefile(file.path(path_shp_box,"CA_Counties_TIGER2016.shp"))
+tomato_ca_2014 <- shapefile(file.path(path_shp_box,"tomato_ca_2014_WGS1984.shp"))
+sum(tomato_ca_2014$Acres)
+ls_tomato_ca_2014 <- split(tomato_ca_2014, tomato_ca_2014$County)
+a <- sapply(ls_tomato_ca_2014, function(x){sum(x$Acres)})
+df_area_county1 <- data.frame("County" = names(a), "Area_landiq" = a)
+
+ls_tomato_fidbound <- list()
+shp_list <- list.files(path_shp, pattern = ".shp", full.names = TRUE)
+for(i in 1:length(shp_list)){
+  ls_tomato_fidbound[[i]] <- shapefile(shp_list[i])
+}
+
+#transform sp
+projection_tomato <- ls_tomato_fidbound[[1]]@proj4string
+CA_counties <- spTransform(CA_counties, projection_tomato)
+plot(CA_counties)
+
+for(i in 1:length(ls_tomato_fidbound)){
+  df <- over(ls_tomato_fidbound[[i]], CA_counties)
+  ls_tomato_fidbound[[i]]@data <- df[,c(2,5)]
+  ls_tomato_fidbound[[i]]$Area_acre <- area(ls_tomato_fidbound[[i]])
+  ls_tomato_fidbound[[i]]$COUNTYFP <- NULL
+  names(ls_tomato_fidbound[[i]])[1] <- "County"
+  ls_tomato_fidbound[[i]]$County <- as.factor(ls_tomato_fidbound[[i]]$County)
+}
+names(ls_tomato_fidbound) <- paste("Year",2008:2019,sep = "_")
+
+tomato_fidbound_2014 <- ls_tomato_fidbound$Year_2014
+tomato_fidbound_2014
+ls_tomato_fidbound_2014 <- base::split(tomato_fidbound_2014@data, tomato_fidbound_2014@data$County)
+a <- sapply(ls_tomato_fidbound_2014, function(x){sum(x$Area_acre)})
+df_area_county2 <- data.frame("County" = names(a), "Area_NASS" = a/4046.8564224)
+
+df_area_county <- merge(df_area_county1, df_area_county2, by = "County")
+df_area_county
+ggplot(df_area_county, aes(x = Area_landiq, y = Area_NASS)) + geom_point() + geom_abline(slope = 1, intercept = 0, color = "red") + xlim(0,110000) + ylim(0,110000) + xlab("Area LandIQ (Acres)") + ylab("Area NASS+BND (Acres)") + theme_bw() + geom_smooth(method = "lm", se = FALSE, col = "blue")
+ggplot(subset(df_area_county, County!="Fresno"), aes(x = Area_landiq, y = Area_NASS)) + geom_point() + geom_abline(slope = 1, intercept = 0, color = "red") + xlim(0,45000) + ylim(0,45000) + xlab("Area LandIQ (Acres)") + ylab("Area NASS+BND (Acres)") + theme_bw() + geom_smooth(method = "lm", se = FALSE, col = "blue")
+
+cor(df_area_county$Area_landiq, df_area_county$Area_NASS)^2  #0.9732
+cor(subset(df_area_county, County!="Fresno")$Area_landiq, subset(df_area_county, County!="Fresno")$Area_NASS)^2  #0.9359
+
+#ggscatter(data = df_area_county, x = "Area_landiq", y = "Area_NASS", add = "reg.line")
+```
+
+#output the shapefile for GEE satellite data extraction 
+```{r}
+for(i in 1:length(ls_tomato_fidbound)){
+  shapefile(ls_tomato_fidbound[[i]], file.path(path_shp, paste0("tomato_fidbound_",2007+i,"_gee.shp")))
+}
+```
+

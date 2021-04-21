@@ -2119,7 +2119,7 @@ summary(lm(b$Predicted_Yield~b$Observed_Yield))
 
 ```
 
-#-------------------------Validatino with RR--------------------------
+#----------------Validatino with RR: Begin--------------------------
 #Russell Ranch Validation using the field-level data from RR
 ```{r}
 path_rr_shp <- "C:/Users/tangz/Box Sync/CC_UCD_RR/Shapefiles"
@@ -2276,28 +2276,52 @@ l578_rr_df$FieldID <- as.factor(l578_rr_df$FieldID)
 ##Combine with yield data
 ```{r}
 path_rr_df <- "C:/Users/tangz/Box Sync/CC_UCD_RR/Dataframes"
-yield_rr <- read.csv(file.path(path_rr_df, "RR_tomyld9419.csv"))
-head(yield_rr)
-names(yield_rr)[1:2] <- c("Year","FieldID")
-dim(yield_rr) #364,8
-yield_rr$yield <- yield_rr$yield * 0.404686
-yield_rr %>% dplyr::filter(Year >= 2008) %>% group_by(Year) %>% summarise(length(FieldID))
+path_df <- "D:/Tomato_Phenology_RemoteSensing/Dataframes"
+
+yield_rr_9419 <- read.csv(file.path(path_df, "RR_Yield_1994_2019.csv"))
+yield_rr_9419 <- yield_rr_9419[,c("year","plot_code","plot_side","block","system_code","irrigation","cash_crop_planted","cash_crop_date_planted","cash_crop_date_harvested","tomato_machineharvest_marketablefruitfreshwt_tonsha")]
+names(yield_rr_9419) <- c("Year","FieldID","plot_side","block","system_code","irrigation","crop","plant_date","harv_date","Yield")
+yield_rr_9419 <- subset(yield_rr_9419, crop == "Tomato")
+dim(yield_rr_9419)
+head(yield_rr_9419)
+yield_rr_9419 <- yield_rr_9419 %>% group_by(Year, FieldID) %>% summarise(Yield = mean(Yield, na.rm = TRUE), plant_date = unique(plant_date), harv_date = unique(harv_date))
+yield_rr_9419$Yield <- yield_rr_9419$Yield * 0.404686 #convert tons/ha to tons/acre
+yield_rr_9419$Year_Field <- paste(yield_rr_9419$Year, yield_rr_9419$FieldID, sep = "_")
+length(unique(subset(yield_rr_9419, Year >= 2008)$Year_Field))  #170
+yield_rr_9419 <- na.omit(yield_rr_9419)
+dim(subset(yield_rr_9419, Year >=2008))  #167,6
 
 
-l578_rr_yield <- base::merge(l578_rr_df, yield_rr, by = c("Year","FieldID"))
-dim(l578_rr_yield) #5334, 24
+
+#yield_rr <- read.csv(file.path(path_rr_df, "RR_tomyld9419.csv"))
+#head(yield_rr_9419)
+#head(yield_rr)
+#head(yield_rr)
+#names(yield_rr)[1:2] <- c("Year","FieldID")
+#dim(yield_rr) #364,8
+#yield_rr$yield <- yield_rr$yield * 0.404686
+#yield_rr %>% dplyr::filter(Year >= 2008) %>% group_by(Year) %>% summarise(length(FieldID))
+
+
+
+l578_rr_yield <- base::merge(l578_rr_df, yield_rr_9419, by = c("Year","FieldID"))
+dim(l578_rr_yield) #5042, 22
+l578_rr_yield$DOY <- as.numeric(strftime(l578_rr_yield$Date, format = "%j"))
+l578_rr_yield$plant_DOY <-  as.numeric(strftime(l578_rr_yield$plant_date, format = "%j"))
+l578_rr_yield$harv_DOY <-  as.numeric(strftime(l578_rr_yield$harv_date, format = "%j"))
+
 
 l578_rr_yield %>% group_by(Year) %>% summarise(length(unique(FieldID)))
 ```
 ##The temporal change of Yield
 ```{r}
-ggplot(subset(yield_rr, Year >= 2008), aes(x = Year, y = yield, col = as.factor(irrigation))) + geom_point() 
+ggplot(subset(yield_rr_9419, Year >= 2008), aes(x = Year, y = yield, col = as.factor(irrigation))) + geom_point() 
 
-ggplot(subset(l578_rr_yield, Year >= 2008), aes(x = Year, y = yield, col = as.factor(irrigation))) + geom_point() 
+ggplot(subset(l578_rr_yield, Year >= 2008), aes(x = Year, y = Yield)) + geom_point() 
 
-ggplot(subset(l578_rr_yield, Year >= 2008), aes(x = Year, y = yield)) + geom_point(size = 2, aes(col = as.factor(irrigation))) + theme_bw() + ylab("Yield (tons/acre)") + scale_x_continuous(breaks = seq(2008, 2019, 3)) + guides(color=guide_legend(title="Irrigation"))  + geom_line(data = subset(yield_county, County == "Yolo"), aes(x = Year, y = Yield), size = 1.5) + geom_point(data = subset(yield_county, County == "Yolo"), aes(x = Year, y = Yield)) + stat_summary(aes(y = yield,group=1), fun.y=mean, colour="red", geom="line",group=1, size = 1.5) + theme(text = element_text(size = 15))      
+ggplot(subset(l578_rr_yield, Year >= 2008), aes(x = Year, y = yield)) + geom_point(size = 2) + theme_bw() + ylab("Yield (tons/acre)") + scale_x_continuous(breaks = seq(2008, 2019, 3)) + guides(color=guide_legend(title="Irrigation"))  + geom_line(data = subset(yield_county, County == "Yolo"), aes(x = Year, y = Yield), size = 1.5) + geom_point(data = subset(yield_county, County == "Yolo"), aes(x = Year, y = Yield)) + stat_summary(aes(y = yield,group=1), fun.y=mean, colour="red", geom="line",group=1, size = 1.5) + theme(text = element_text(size = 15))      
 
-ggplot(subset(l578_rr_yield, Year >= 2008), aes(x = Year, y = yield)) + geom_point(size = 2, aes(col = as.factor(irrigation))) + theme_bw() + ylab("Yield (tons/acre)") + scale_x_continuous(breaks = seq(2008, 2019, 3)) + guides(color=guide_legend(title="Irrigation"))  + geom_line(data = subset(yield_county, County == "Yolo"), aes(x = Year, y = Yield), size = 1.5) + geom_point(data = subset(yield_county, County == "Yolo"), aes(x = Year, y = Yield)) + stat_summary(aes(y = yield,group=1), fun.y=mean, colour="red", geom="line",group=1, size = 1.5) + theme(text = element_text(size = 15))      
+ggplot(subset(l578_rr_yield, Year >= 2008), aes(x = Year, y = Yield)) + geom_point(size = 2) + theme_bw() + ylab("Yield (tons/acre)") + scale_x_continuous(breaks = seq(2008, 2019, 3))   + geom_line(data = subset(yield_county, County == "Yolo"), aes(x = Year, y = Yield), size = 1.5, color = "red") + geom_point(data = subset(yield_county, County == "Yolo"), aes(x = Year, y = Yield)) + stat_summary(aes(y = Yield,group=1), fun.y=mean, colour="black", geom="line",group=1, size = 1.5) + theme(text = element_text(size = 15))      
 
 ```
 ##Monthly VIs
@@ -2307,34 +2331,35 @@ names(l578_county_month)
 
 l578_rr_month <- aggregate(subset(l578_rr_yield, Month %in% c(4:10))[,c("Blue","Green","Red","NIR","SWIR1","SWIR2","NDVI","EVI","EVI2","WDRVI","NDMI","NIRv")], by = list("Year" = subset(l578_rr_yield, Month %in% c(4:10))$Year, "FieldID" = subset(l578_rr_yield, Month %in% c(4:10))$FieldID, "Month" = subset(l578_rr_yield, Month %in% c(4:10))$Month), FUN = mean)
 #merge with yield 
-l578_rr_month_yield <- merge(l578_rr_month, yield_rr, by = c("Year","FieldID"))
+l578_rr_month_yield <- merge(l578_rr_month, yield_rr_9419, by = c("Year","FieldID"))
 dim(l578_rr_month_yield)
 #convert long to wide/
 l578_rr_month_yield <- tidyr::pivot_wider(data = l578_rr_month_yield, names_from = Month, values_from = Blue:NIRv)
-names(l578_rr_month_yield)[8] <- "Yield"
-l578_rr_month_yield$Year <- as.factor(l578_rr_month_yield$Year)
+#l578_rr_month_yield$Year <- as.factor(l578_rr_month_yield$Year)
 #l578_county_monthweighted_yield <- tidyr::pivot_wider(data = l578_county_monthweighted_yield, names_from =  Month, values_from = Blue:NIRv)
 
 head(l578_rr_month)
 
 head(l578_rr_month)
-dim(l578_rr_month_yield) #176,92
+dim(l578_rr_month_yield) #167,90
 
 
-a <- cor(l578_rr_month_yield$yield, l578_rr_month_yield[,c(9:92)])
-View(t(a))
-dim(l578_rr_month_yield) #176,92
+cor1 <- cor(l578_rr_month_yield$Yield, l578_rr_month_yield[,c(7:90)])
+View(t(cor1))
+dim(l578_rr_month_yield) #167,90
 sum(is.na(l578_rr_month_yield)) #0
 
 
 ggplot(l578_rr_month_yield, aes(x=yield,y=NIR_7)) + geom_point() + theme_bw()
 
 
-b <- cor(l578_county_monthweighted_yield$Yield, l578_county_monthweighted_yield[,c(11:94)])
-View(t(b))
 
 p1 = ggscatter(l578_rr_month_yield, x = "NIRv_7", y = "Yield", add = "reg.line") + theme_bw() + stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
 p1
+p2 = ggscatter(l578_rr_month_yield, x = "SWIR2_7", y = "Yield", add = "reg.line") + theme_bw() + stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
+p2
+p3 = ggscatter(l578_rr_month_yield, x = "NDMI_9", y = "Yield", add = "reg.line") + theme_bw() + stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
+p3
 ggscatter(l578_rr_month_yield, x = "NIRv_7", y = "Yield", add = "reg.line", color = "Year") + theme_bw() + stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
 p2 = ggscatter(l578_rr_month_yield, x = "SWIR2_7", y = "Yield", add = "reg.line") + theme_bw() + stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
 p2
@@ -2361,10 +2386,21 @@ weather_davis$Year <- lubridate::year(weather_davis$Date)
 weather_davis$Month <- lubridate::month(weather_davis$Date)
 sum(is.na(weather_davis))
 weather_davis <- na.omit(weather_davis)
-#convert long to wide 
-weather_davis_wide <- tidyr::pivot_wider(weather_davis, names_from = Year, values_from = MaxTemp:vs)
-
+#add DOY
+weather_davis$DOY <-as.numeric(strftime(weather_davis$Date, format = "%j"))
 ```
+###Monthly Average weather 
+```{r}
+l578_rr_month <- aggregate(subset(l578_rr_yield, Month %in% c(4:10))[,c("Blue","Green","Red","NIR","SWIR1","SWIR2","NDVI","EVI","EVI2","WDRVI","NDMI","NIRv")], by = list("Year" = subset(l578_rr_yield, Month %in% c(4:10))$Year, "FieldID" = subset(l578_rr_yield, Month %in% c(4:10))$FieldID, "Month" = subset(l578_rr_yield, Month %in% c(4:10))$Month), FUN = mean)
+
+weather_rr_month <- aggregate(subset(weather_davis, Month %in% c(4:10))[,c("MaxTemp","MinTemp","RH","ETo","Precip","srad","vs")], by = list("Year"=subset(weather_davis, Month %in% c(4:10))$Year, "Month" = subset(weather_davis, Month %in% c(4:10))$Month), FUN = mean)
+#convert long to wide 
+weather_rr_wide <- tidyr::pivot_wider(weather_rr_month, names_from = Month, values_from = MaxTemp:vs)
+head(weather_rr_month)
+head(weather_rr_wide)
+View(weather_rr_wide)
+```
+
 ###Extreme weather events 
 ```{r}
 #monthly average from 2018 
@@ -2394,120 +2430,394 @@ sum(is.na(extreme_rr_wide)) #0
 dim(extreme_rr_wide) #12,37
 
 #merge with monthly weather 
-weather_davis_wide <- merge(weather_davis_wide, extreme_rr_wide, by = "Year")
-weather_county_wide <- merge(daymet_county_wide, extreme_county_wide, by = c("County","Year"))
+weather_rr_wide <- merge(weather_rr_wide, extreme_rr_wide, by = "Year")
+weather_rr_wide
+```
+###Combine with Yield Data and plots
+```{r}
+weather_rr_month_yield <- merge(weather_rr_wide, yield_rr_9419, by = "Year")
+weather_rr_month_yield
+
+cor2 <- cor(weather_rr_month_yield$Yield, weather_rr_month_yield[,c(2:86)])
+View(t(cor2))
+ggscatter(weather_rr_month_yield, x = "MaxTemp_7", y = "Yield", add = "reg.line") +theme_bw() +  stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
+
+ggscatter(weather_rr_month_yield, x = "srad_6", y = "yield", add = "reg.line") +theme_bw() +  stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
 
 ```
 
-
-##Smoothed daily VIs
+#Calculate peak VIs 
+##Generate smoothed daily data
 ```{r}
+dim(l578_rr_yield) #5334, 24
+sum(is.na(l578_rr_yield)) #0
+names(l578_rr_yield)
+l578_rr_yield$Year_Field <- paste(l578_rr_yield$Year, l578_rr_yield$FieldID, sep = "_")
+l578_rr_yield$Year_Field #"2010_6_4"
 
-head(l578_ts_df_filt1)
-dim(l578_ts_df_filt1)  #2271453, 18
+ls_field_rr <- split(l578_rr_yield, l578_rr_yield$Year_Field)
+length(ls_field_rr)  #166
 
-ls_field_filt2 <- split(l578_ts_df_filt1, l578_ts_df_filt1$Year_Field)
-length(ls_field_filt2) #49741
-ls_field_filt2[[1]]
+ls_field_rr_smooth <- list()
+field_peak_rr <- data.frame("ID" = names(ls_field_rr), "Year" = 0, "peakT_EVI" = 0, "peakV_EVI"=0, "peakT_NDVI" = 0, "peakV_NDVI" = 0, "peakT_EVI2" = 0, "peakV_EVI2" = 0, "peakT_WDRVI" = 0, "peakV_WDRVI" = 0, "peakT_NDMI" = 0, "peakV_NDMI" = 0, "peakT_NIRv" = 0, "peakV_NIRv" = 0)
+field_peak_rr$Year <- sapply(strsplit(field_peak_rr$ID, split = "_"), '[', 1)
+field_peak_rr$FieldID1 <- sapply(strsplit(field_peak_rr$ID, split = "_"), '[', 2)
+field_peak_rr$FieldID2 <- sapply(strsplit(field_peak_rr$ID, split = "_"), '[', 3)
+field_peak_rr$FieldID <- paste(field_peak_rr$FieldID1, field_peak_rr$FieldID2, sep = "_")
+field_peak_rr$FieldID1 <- NULL
+field_peak_rr$FieldID2 <- NULL
+head(field_peak_rr)
 
-ls_field_filt2_smooth <- list()
-field_peak <- data.frame("ID" = names(ls_field_filt2), "Year" = 0,"Area_acre" = 0,"County" = 0, "peakT_EVI" = 0, "peakV_EVI"=0, "peakT_NDVI" = 0, "peakV_NDVI" = 0, "peakT_EVI2" = 0, "peakV_EVI2" = 0, "peakT_WDRVI" = 0, "peakV_WDRVI" = 0, "peakT_NDMI" = 0, "peakV_NDMI" = 0, "peakT_NIRv" = 0, "peakV_NIRv" = 0)
-field_peak$Year <- sapply(strsplit(field_peak$ID, split = "_"),'[',1)
-field_peak$Area_acre <- sapply(strsplit(field_peak$ID, split = "_"),'[',2)
 
-
-for(i in 1:length(ls_field_filt2)){
-  df <- ls_field_filt2[[i]]
+for(i in 1:length(ls_field_rr)){
+  df <- ls_field_rr[[i]]
   DOY <- as.numeric(strftime(df$Date, format = "%j"))
-  field_peak$County[i] <- unique(df$County)
+  #field_peak_rr$County[i] <- unique(df$County)
   #EVI
-  EVI_filt <- sgolayfilt(df$EVI)
+  #EVI_filt <- sgolayfilt(df$EVI)
+  EVI_filt <- df$EVI
   EVI_DOY <- cbind(1:365, NA)
   EVI_DOY[DOY, 2] <- EVI_filt
   EVI_smooth <- na_interpolation(x = EVI_DOY, option = "linear")
-  ls_field_filt2_smooth[[i]] <- data.frame("DOY"=EVI_smooth[,1], "EVI" = EVI_smooth[,2])
-  ls_field_filt2_smooth[[i]]$Area_acre <- unique(df$Area_acre)
-  ls_field_filt2_smooth[[i]]$Year <- unique(df$Year)
-  ls_field_filt2_smooth[[i]]$County <- unique(df$County)
+  ls_field_rr_smooth[[i]] <- data.frame("DOY"=EVI_smooth[,1], "EVI" = EVI_smooth[,2])
+  #ls_field_rr_smooth[[i]]$Area_acre <- unique(df$Area_acre)
+  ls_field_rr_smooth[[i]]$Year <- unique(df$Year)
+  #ls_field_rr_smooth[[i]]$County <- unique(df$County)
   ##find peaks during June-Sept
-  EVI_smooth_peak <- subset(ls_field_filt2_smooth[[i]], DOY> 150 & DOY < 273)
-  field_peak$peakV_EVI[i] <- max(EVI_smooth_peak$EVI)
-  field_peak$peakT_EVI[i] <- which.max(EVI_smooth_peak$EVI)+150 
+  EVI_smooth_peak <- subset(ls_field_rr_smooth[[i]], DOY> 150 & DOY < 273)
+  field_peak_rr$peakV_EVI[i] <- max(EVI_smooth_peak$EVI)
+  field_peak_rr$peakT_EVI[i] <- which.max(EVI_smooth_peak$EVI)+150 
   #NDVI
-  NDVI_filt <- sgolayfilt(df$NDVI)
+  #NDVI_filt <- sgolayfilt(df$NDVI)
+  NDVI_filt <- df$NDVI
   NDVI_DOY <- cbind(1:365, NA)
   NDVI_DOY[DOY, 2] <- NDVI_filt
   NDVI_smooth <- na_interpolation(x = NDVI_DOY, option = "linear")
-  ls_field_filt2_smooth[[i]]$NDVI <- NDVI_smooth[,2]
-  NDVI_smooth_peak <- subset(ls_field_filt2_smooth[[i]], DOY > 150 & DOY < 273)
-  field_peak$peakV_NDVI[i] <- max(NDVI_smooth_peak$NDVI)
-  field_peak$peakT_NDVI[i] <- which.max(NDVI_smooth_peak$NDVI)+150
+  ls_field_rr_smooth[[i]]$NDVI <- NDVI_smooth[,2]
+  NDVI_smooth_peak <- subset(ls_field_rr_smooth[[i]], DOY > 150 & DOY < 273)
+  field_peak_rr$peakV_NDVI[i] <- max(NDVI_smooth_peak$NDVI)
+  field_peak_rr$peakT_NDVI[i] <- which.max(NDVI_smooth_peak$NDVI)+150
   #EVI2
-  EVI2_filt <- sgolayfilt(df$EVI2)
+  #EVI2_filt <- sgolayfilt(df$EVI2)
+  EVI2_filt <- df$EVI2
   EVI2_DOY <- cbind(1:365, NA)
   EVI2_DOY[DOY, 2] <- EVI2_filt
   EVI2_smooth <- na_interpolation(x = EVI2_DOY, option = "linear")
-  ls_field_filt2_smooth[[i]]$EVI2 <- EVI2_smooth[,2]
+  ls_field_rr_smooth[[i]]$EVI2 <- EVI2_smooth[,2]
   EVI2_smooth_peak <- subset(ls_field_filt2_smooth[[i]], DOY > 150 & DOY < 273)
-  field_peak$peakV_EVI2[i] <- max(EVI2_smooth_peak$EVI2)
-  field_peak$peakT_EVI2[i] <- which.max(EVI2_smooth_peak$EVI2)+150
+  field_peak_rr$peakV_EVI2[i] <- max(EVI2_smooth_peak$EVI2)
+  field_peak_rr$peakT_EVI2[i] <- which.max(EVI2_smooth_peak$EVI2)+150
   #WDRVI
-  WDRVI_filt <- sgolayfilt(df$WDRVI)
+  #WDRVI_filt <- sgolayfilt(df$WDRVI)
+  WDRVI_filt <- df$WDRVI
   WDRVI_DOY <- cbind(1:365, NA)
   WDRVI_DOY[DOY, 2] <- WDRVI_filt
   WDRVI_smooth <- na_interpolation(x = WDRVI_DOY, option = "linear")
-  ls_field_filt2_smooth[[i]]$WDRVI <- WDRVI_smooth[,2]
+  ls_field_rr_smooth[[i]]$WDRVI <- WDRVI_smooth[,2]
   WDRVI_smooth_peak <- subset(ls_field_filt2_smooth[[i]], DOY > 150 & DOY < 273)
-  field_peak$peakV_WDRVI[i] <- max(WDRVI_smooth_peak$WDRVI)
-  field_peak$peakT_WDRVI[i] <- which.max(WDRVI_smooth_peak$WDRVI)+150
+  field_peak_rr$peakV_WDRVI[i] <- max(WDRVI_smooth_peak$WDRVI)
+  field_peak_rr$peakT_WDRVI[i] <- which.max(WDRVI_smooth_peak$WDRVI)+150
   #NDMI
-  NDMI_filt <- sgolayfilt(df$NDMI)
+  #NDMI_filt <- sgolayfilt(df$NDMI)
+  NDMI_filt <- df$NDMI
   NDMI_DOY <- cbind(1:365, NA)
   NDMI_DOY[DOY, 2] <- NDMI_filt
   NDMI_smooth <- na_interpolation(x = NDMI_DOY, option = "linear")
-  ls_field_filt2_smooth[[i]]$NDMI <- NDMI_smooth[,2]
+  ls_field_rr_smooth[[i]]$NDMI <- NDMI_smooth[,2]
   NDMI_smooth_peak <- subset(ls_field_filt2_smooth[[i]], DOY > 150 & DOY < 273)
-  field_peak$peakV_NDMI[i] <- max(NDMI_smooth_peak$NDMI)
-  field_peak$peakT_NDMI[i] <- which.max(NDMI_smooth_peak$NDMI)+150
+  field_peak_rr$peakV_NDMI[i] <- max(NDMI_smooth_peak$NDMI)
+  field_peak_rr$peakT_NDMI[i] <- which.max(NDMI_smooth_peak$NDMI)+150
   #NIRv
-  NIRv_filt <- sgolayfilt(df$NIRv)
+  #NIRv_filt <- sgolayfilt(df$NIRv)
+  NIRv_filt <- df$NIRv
   NIRv_DOY <- cbind(1:365, NA)
   NIRv_DOY[DOY, 2] <- NIRv_filt
   NIRv_smooth <- na_interpolation(x = NIRv_DOY, option = "linear")
-  ls_field_filt2_smooth[[i]]$NIRv <- NIRv_smooth[,2]
+  ls_field_rr_smooth[[i]]$NIRv <- NIRv_smooth[,2]
   NIRv_smooth_peak <- subset(ls_field_filt2_smooth[[i]], DOY > 150 & DOY < 273)
-  field_peak$peakV_NIRv[i] <- max(NIRv_smooth_peak$NIRv)
-  field_peak$peakT_NIRv[i] <- which.max(NIRv_smooth_peak$NIRv)+150
+  field_peak_rr$peakV_NIRv[i] <- max(NIRv_smooth_peak$NIRv)
+  field_peak_rr$peakT_NIRv[i] <- which.max(NIRv_smooth_peak$NIRv)+150
 }
-head(field_peak)
-summary(field_peak$peakT_EVI)
-summary(field_peak$peakV_EVI)
-hist(field_peak$peakV_EVI)
-sum(field_peak$peakV_EVI<0) #6
-sum(field_peak$peakV_EVI<0.2) #165
-sum(field_peak$peakV_NDVI<0.3) #165
-sum(field_peak$peakV_NDVI<0.4) #285
 
-sum(field_peak$peakV_EVI<=0.3) #371
-sum(field_peak$peakT_EVI==151) #606
-sum(field_peak_filt$peakT_EVI==272) #160
+head(field_peak_rr)
+tail(field_peak_rr)
+dim(field_peak_rr)  #166,15
+ls_field_rr_smooth[[1]]
 
-#remove fields that have low ndvi
-field_peak_filt <- field_peak %>% dplyr::filter(peakV_NDVI>0.4)
-filter_lowndvi <- which(field_peak$peakV_NDVI >= 0.4)
-ls_field_filt2_smooth_filt <- ls_field_filt2_smooth[filter_lowndvi]
-#calculate data
+summary(field_peak_rr$peakT_EVI)
+summary(field_peak_rr$peakV_EVI)
+hist(field_peak_rr$peakV_EVI)
+sum(field_peak_rr$peakV_EVI<0) #6
+sum(field_peak_rr$peakV_EVI<0.2) #165
+sum(field_peak_rr$peakV_EVI<0.3) #165
+sum(field_peak_rr$peakV_EVI<0.4) #47
+sum(field_peak_rr$peakV_NDVI<0.4) #0
+sum(field_peak_rr$peakV_NDVI<0.5) #10
 
-head(field_peak_filt)
-head(ls_field_filt2_smooth[[1]])
-field_peak_filt
+sum(field_peak_rr$peakV_EVI<=0.3) #0
+sum(field_peak_rr$peakT_EVI==151) #606
+sum(field_peak_rr$peakT_EVI==272) #1
 
-length(ls_field_filt2_smooth)
-names(ls_field_filt2_smooth) <- names(ls_field_filt2)
+#add name to the list
+names(ls_field_rr)
+names(ls_field_rr_smooth) <- names(ls_field_rr)
 
 ```
 
+##Merge peakV with Yield 
+```{r}
+field_peak_rr_yield <- base::merge(field_peak_rr, yield_rr_9419, by = c("Year","FieldID"), all.x = TRUE, all.y = FALSE)
+dim(field_peak_rr_yield) #176,21
+dim(field_peak_rr)  #166,15
+dim(yield_rr_9419)  #364,8
+View(field_peak_rr_yield)
+
+#names(field_peak_rr_yield)[21] <- "Yield"
+cor3 <- cor(field_peak_rr_yield$Yield, field_peak_rr_yield[,c(4:15)])
+View(t(cor3))
+#p1 = ggscatter(county_peak_monthweighted_yield, x = "peakV_NIRv", y = "Yield", add = "reg.line") + theme_bw() + stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
+
 ```
+
+##Exploratory plots
+```{r}
+names(field_peak_rr)
+ggplot(field_peak_rr, aes(x = peakT_EVI, y = peakV_EVI)) + geom_point()
+dim(field_peak_rr)
+ggscatter(field_peak_rr_yield, x = "peakV_EVI", y = "Yield", add = "reg.line") + theme_bw() +  stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
+ggscatter(field_peak_rr_yield, x = "peakV_NDVI", y = "Yield")
+ggscatter(field_peak_rr_yield, x = "peakV_NIRv", y = "Yield") 
+ggscatter(field_peak_rr_yield, x = "peakV_NDVI", y = "Yield")
+
+```
+
+##Analyze Smoothed daily VIs
+```{r}
+length(ls_field_rr_smooth) #167
+head(ls_field_rr_smooth[[1]])
+names(ls_field_rr_smooth)
+names(ls_field_rr_smooth[[1]])
+
+#make it a big dataframe 
+for(i in 1:length(ls_field_rr_smooth)){
+  df <- ls_field_rr_smooth[[i]]
+  df$Year_Field <- names(ls_field_rr_smooth)[i]
+  df$Year <- sapply(strsplit(df$Year_Field, split= "_"), '[',1)
+  df$FieldID1 <- sapply(strsplit(df$Year_Field, split= "_"), '[',2)
+  df$FieldID2 <- sapply(strsplit(df$Year_Field, split= "_"), '[',3)
+  df$FieldID <- paste(df$FieldID1, df$FieldID2, sep = "_")
+  df$FieldID1 <- NULL
+  df$FieldID2 <- NULL
+  ls_field_rr_smooth[[i]] <- df
+}
+df_field_rr_smooth <- do.call(rbind, ls_field_rr_smooth)
+dim(df_field_rr_smooth)  #60590,10
+length(ls_field_rr_smooth)  #166
+dim(subset(yield_rr_9419, Year >= 2008)) #167,6
+
+#merge with yield data
+df_field_rr_yield <- base::merge(df_field_rr_smooth, yield_rr_9419, by = c("Year", "FieldID", "Year_Field"))
+dim(df_field_rr_smooth) #60590,10
+dim(df_field_rr_yield)  #60590, 13
+head(df_field_rr_yield)
+
+
+#planting date and harvest date
+plantdate_rr <- df_field_rr_yield %>% group_by(Year) %>% summarise(plant_date= unique(plant_date))
+plantdate_rr$plant_date_DOY <- as.numeric(strftime(plantdate_rr$plant_date, format = "%j"))
+harvdate_rr <- df_field_rr_yield %>% group_by(Year) %>% summarise(harv_date= unique(harv_date))
+harvdate_rr$harv_date_DOY <- as.numeric(strftime(harvdate_rr$harv_date, format = "%j"))
+
+plant_harv_date_rr <- merge(plantdate_rr, harvdate_rr, by = "Year")
+
+ggplot(plant_harv_date_rr, aes(x = Year, y = harv_date_DOY)) + geom_point() + geom_point(aes(x = Year, y = plant_date_DOY), color = "red") + theme_bw() + ylab("DOY")
+
+plant_harv_date_rr$grow_length <- plant_harv_date_rr$harv_date_DOY - plant_harv_date_rr$plant_date_DOY
+
+ggplot(plant_harv_date_rr, aes(x = Year, y = grow_length))+ geom_point() + ylab("DOY")
+
+#GDD from planting to harvest
+
+```
+###Plot the time sereis VIs
+```{r}
+head(df_field_rr_yield)
+ggplot(subset(df_field_rr_yield, Year == 2019 & DOY > 100 & DOY < 300), aes(x = DOY, y = NDVI, color = FieldID)) + geom_point(size = 0.1) + geom_smooth(se = FALSE) + theme_bw()# + facet_wrap()
+
+ggplot(subset(df_field_rr_yield, Year == 2019 & DOY > 100 & DOY < 300), aes(x = DOY, y = NDVI, color = FieldID)) + geom_point(size = 0.05) + geom_smooth(se = FALSE) + theme_bw()+ facet_wrap(~FieldID) + geom_vline(xintercept = 121) + geom_vline(xintercept = 250)
+
+ggplot(subset(l578_rr_yield, Year == 2019 & DOY > 100 & DOY < 300), aes(x = DOY, y = NDVI, color = FieldID)) + geom_point()  + theme_bw()+ facet_wrap(~FieldID) + geom_vline(xintercept = 121) + geom_vline(xintercept = 250)
+
+ggplot(subset(l578_rr_yield, Year == 2019 & DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, color = FieldID)) + geom_point()  + theme_bw()+ geom_vline(xintercept = 121, color = "darkgreen") + geom_vline(xintercept = 250, color = "brown") 
+
+#EVI
+ggplot(subset(l578_rr_yield,  DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, FieldID)) + geom_point(size = 0.05)  + theme_bw()  + geom_vline(data = l578_rr_yield, aes(xintercept = plant_DOY), color = "darkgreen")+ geom_vline(data = l578_rr_yield, aes(xintercept = harv_DOY), color = "brown")+ facet_wrap(~Year)
+#NIRv
+ggplot(subset(l578_rr_yield,  DOY > 100 & DOY < 300), aes(x = DOY, y = NIRv, FieldID)) + geom_point(size = 0.05)  + theme_bw()  + geom_vline(data = l578_rr_yield, aes(xintercept = plant_DOY), color = "darkgreen")+ geom_vline(data = l578_rr_yield, aes(xintercept = harv_DOY), color = "brown")+ facet_wrap(~Year)
+
+
+
+
+ggplot(subset(df_field_smooth))
+
+head(l578_rr_yield) 
+
+cor4 <- l578_rr_yield %>% group_by(Year) %>% summarise(cor(Yield, NDVI))
+cor4 <- data.frame()
+
+head(df_field_rr_yield)
+head(df_field_rr_smooth)
+
+ggplot(subset(df_field_rr_yield, Year == 2019 & DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, color = FieldID)) + geom_point()  + theme_bw()+ geom_vline(xintercept = 121, color = "darkgreen") + geom_vline(xintercept = 250, color = "brown") + facet_wrap(~FieldID)
+
+
+ggplot(subset(l578_rr_yield, Year == 2019 & DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, color = FieldID)) + geom_point()  + theme_bw()+ geom_vline(xintercept = 121, color = "darkgreen") + geom_vline(xintercept = 250, color = "brown") + facet_wrap(~FieldID)
+
+
+```
+###Merge daily VIs with weather data
+```{r}
+head(df_field_rr_yield)
+head(weather_davis)
+head(gdd_daily_rr)
+dim(df_field_rr_yield)  #60955,13
+dim(weather_davis)  #4351,11
+
+df_field_rr_yield_weather <- merge(df_field_rr_yield, weather_davis, by = c("Year","DOY"))
+head(df_field_rr_yield_weather)
+dim(df_field_rr_yield_weather)  #60524,22
+df_field_rr_yield_weather <- merge(df_field_rr_yield_weather, gdd_daily_rr[,c("Year","GDD","DOY")], by = c("Year","DOY"))
+head(df_field_rr_yield_weather)
+dim(df_field_rr_yield_weather)  #60524,23
+
+
+a <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% arrange(DOY) %>% summarise(EVI_cum = cumsum(EVI),NDVI_cum = cumsum(NDVI),EVI2_cum = cumsum(EVI2),WDRVI_cum = cumsum(WDRVI),NDMI_cum = cumsum(NDMI), NIRv_cum = cumsum(NIRv), srad_sum = cumsum(srad), Year = Year, DOY = DOY)
+
+dim(a) #60524,9
+head(a)
+
+df_field_rr_yield_weather <- merge(df_field_rr_yield_weather, a, by = c("Year_Field","Year","DOY"))
+dim(df_field_rr_yield_weather) 
+head(df_field_rr_yield_weather)
+
+df_field_rr_yield_weather$plant_DOY <- as.numeric(strftime(df_field_rr_yield_weather$plant_date, format = "%j"))
+df_field_rr_yield_weather$harv_DOY <- as.numeric(strftime(df_field_rr_yield_weather$harv_date, format = "%j"))
+
+subset(df_field_rr_yield_weather, DOY>plant_DOY)
+```
+
+###Cumulative VIs
+```{r}
+class(df_field_rr_yield_weather$plant_date)
+as.numeric(strftime(df$Date, format = "%j"))
+
+b <- df_field_rr_yield_weather %>% group_by(Year) %>% summarise(cor(Yield, NDVI))
+
+
+```
+
+##GDDs 
+###From transplanting to harvest
+```{r}
+head(weather_davis)
+gdd_daily_rr <- weather_davis %>% group_by(Year) %>% summarise("Date" = Date,"MaxTemp" = MaxTemp, "MinTemp" = MinTemp,"GDD" = pollen::gdd(tmax = MaxTemp, tmin = MinTemp, tbase = 10, tbase_max = 30, type = "C"))
+head(gdd_daily_rr)
+#add DOY column 
+gdd_daily_rr$DOY <- as.numeric(strftime(gdd_daily_rr$Date, format = "%j"))
+
+plantdate_rr <- merge(plantdate_rr, gdd_daily_rr, by.x = c("Year","plant_date_DOY"), by.y = c("Year", "DOY"))
+harvdate_rr <- merge(harvdate_rr, gdd_daily_rr, by.x = c("Year","harv_date_DOY"), by.y = c("Year", "DOY"))
+dim(plantdate_rr) #12,7
+dim(harvdate_rr)#19,7
+
+plant_harv_date_rr <- merge(plantdate_rr, harvdate_rr, by = "Year")
+dim(plant_harv_date_rr) #19,13
+head(plant_harv_date_rr)
+plant_harv_date_rr$GDD_cum <- (plant_harv_date_rr$GDD.y - plant_harv_date_rr$GDD.x)
+ggplot(plant_harv_date_rr, aes(x = Year, y= GDD_cum)) + geom_point() + theme_bw() + geom_abline(intercept = 1300, slope = 0, color = "red") + ylab("GDD from Plant to Harvest")
+View(plant_harv_date_rr)
+names(plant_harv_date_rr)
+head(plant_harv_date_rr)
+plant_harv_date_rr <- plant_harv_date_rr[,c("Year","plant_date_DOY","plant_date", "GDD.x","harv_date_DOY","harv_date","GDD.y","GDD_cum")]
+names(plant_harv_date_rr)[c(4,7,8)] <- c("GDD_plant","GDD_harv","GDD_plant_harv")
+
+dim(plantdate_rr) #12,3
+dim(gdd_daily_rr)
+plantdate_rr
+
+str(plant_harv_date_rr)
+plant_harv_date_rr <- plant_harv_date_rr %>% group_by(Year) %>% summarise(GDD_plant = mean(GDD_plant), GDD_harv = mean(GDD_harv), GDD_plant_harv = mean(GDD_plant_harv))
+ggplot(plant_harv_date_rr, aes(x = Year, y= GDD_plant_harv)) + geom_point() + theme_bw() + geom_abline(intercept = 1300, slope = 0, color = "red") + ylab("GDD from Plant to Harvest")
+
+```
+
+###from transplanting to peak
+```{r}
+head(field_peak_rr_yield)
+peakdate_rr <- merge(field_peak_rr_yield[,c("Year","FieldID","peakT_NDVI")], gdd_daily_rr, by.x=c("Year","peakT_NDVI"), by.y = c("Year","DOY"))
+head(a)
+head(plantdate_rr)
+peakdate_rr <- merge(peakdate_rr, plantdate_rr, by = "Year")
+head(peakdate_rr)
+
+peakdate_rr$GDD_cum <- peakdate_rr$GDD.x - peakdate_rr$GDD.y
+peakdate_rr$GDD_cum
+hist(peakdate_rr$GDD_cum, xlab = "Growing Degree Days", main = "Histogram of GDD from Transplanting to Peak in RR") 
+abline(v = 800, col = "red")
+```
+
+##Cumulative VIs
+```{r}
+head(weather_davis)
+head(weather_)
+```
+
+
+##Calculate county-level average daily VIs
+```{r}
+head(weather_davis)
+```
+
+```{r}
+length(ls_field_filt2_smooth_filt) #49456
+dim(field_peak_filt)  #49576
+head(ls_field_filt2_smooth_filt[[1]])
+
+df_field_smooth <- do.call(rbind, ls_field_filt2_smooth_filt)
+
+
+#calculate the weighted ratio 
+df_temp <- field_peak_filt %>% group_by(Area_acre, Year) %>% summarise("Area_acre"= unique(Area_acre), "County" = unique(County))
+head(df_temp)
+df_temp$Area_acre <- as.numeric(df_temp$Area_acre)
+df_temp <- aggregate(df_temp[,"Area_acre"], by = list("County" = df_temp$County, "Year" = df_temp$Year), FUN = sum)
+df_temp$Area_acre <- df_temp$Area_acre/4046.8564224
+#add yield data to dataframe
+df_temp <- merge(df_temp, yield_county, by = c("County","Year"))
+names(df_temp)[c(3,6)] <- c("Area_NASS", "Area_Report")
+ggplot(df_temp, aes(x = Area_NASS, y = Area_Report)) + geom_point()
+county_peak_monthweighted <- merge(df_temp, field_peak_filt, by = c("Year", "County"))
+head(county_peak_monthweighted)
+dim(county_peak_monthweighted) #45881,25
+county_peak_monthweighted$Area_acre<- as.numeric(county_peak_monthweighted$Area_acre)
+#calculate area ratio 
+county_peak_monthweighted$Area_ratio <- county_peak_monthweighted$Area_acre/4046.8564224/county_peak_monthweighted$Area_NASS
+county_peak_monthweighted <- county_peak_monthweighted %>% group_by(County, Year) %>% summarise("peakT_EVI" = weighted.mean(peakT_EVI, Area_ratio),"peakV_EVI" = weighted.mean(peakV_EVI, Area_ratio), "peakT_NDVI" = weighted.mean(peakT_NDVI), "peakV_NDVI" = weighted.mean(peakV_NDVI), "peakT_EVI2" = weighted.mean(peakT_EVI2), "peakV_EVI2" = weighted.mean(peakV_EVI2), "peakT_WDRVI" = weighted.mean(peakT_WDRVI), "peakV_WDRVI" = weighted.mean(peakV_WDRVI), "peakT_NDMI" = weighted.mean(peakT_NDMI), "peakV_NDMI" = weighted.mean(peakV_NDMI), "peakT_NIRv" = weighted.mean(peakT_NIRv), "peakV_NIRv" = weighted.mean(peakV_NIRv))
+head(county_peak_monthweighted)
+#combine with yield 
+county_peak_monthweighted_yield <- merge(county_peak_monthweighted, yield_county, by = c("Year","County"))
+dim(county_peak_monthweighted) #162, 14
+dim(county_peak_monthweighted_yield) #140, 22
+
+```
+
+
+#----------------Validatino with RR: End--------------------------
+
+
+
+#-------------
+#-------------
 
 #--------------Not useful below--------------------
 #Yield model all together

@@ -35,6 +35,7 @@ library(ggpubr)
 library(ggmap)
 library(pollen)
 library(stringr)
+library(plantecophys)
 ```
 #Read commisioner yield data
 https://www.nass.usda.gov/Statistics_by_State/California/Publications/AgComm/index.php
@@ -344,12 +345,20 @@ ndmi_l57 <- function(df){
   return(NDMI)
 }
 
+gci_l57 <- function(df){
+  nir <- df$B4
+  green <- df$B2
+  GCI <- nir/green - 1
+  return(GCI)
+}
+
 addVIs_l57 <- function(df){
   df$NDVI <- ndvi_l57(df)
   df$EVI <- evi_l57(df)
   df$EVI2 <- evi2_l57(df)
   df$WDRVI <- wdrvi_l57(df)
   df$NDMI <- ndmi_l57(df)
+  df$GCI <- gci_l57(df)
   return(df)
 }
 ```
@@ -498,12 +507,20 @@ ndmi_l8 <- function(df){
   return(NDMI)
 }
 
+gci_l8 <- function(df){
+  nir <- df$B5
+  green <- df$B3
+  GCI <- nir/green - 1
+  return(GCI)
+}
+
 addVIs_l8 <- function(df){
   df$NDVI <- ndvi_l8(df)
   df$EVI <- evi_l8(df)
   df$EVI2 <- evi2_l8(df)
   df$WDRVI <- wdrvi_l8(df)
   df$NDMI <- ndmi_l8(df)
+  df$GCI <- gci_l8(df)
   return(df)
 }
 ```
@@ -2263,7 +2280,7 @@ l8sr_rr_df$Sensor <- "L8"
 l578_rr_df <- rbind(l5sr_rr_df, l7sr_rr_df, l8sr_rr_df)
 head(l578_rr_df)
 dim(l578_rr_df) #26157,18
-dim(subset(l578_rr_df, Year >= 2008)) #26157, 18
+dim(subset(l578_rr_df, Year >= 2008)) #26157, 19
 sum(is.na(l8sr_rr_df)) #0
 
 #replace "-' with "_"
@@ -2305,7 +2322,7 @@ dim(subset(yield_rr_9419, Year >=2008))  #167,6
 
 
 l578_rr_yield <- base::merge(l578_rr_df, yield_rr_9419, by = c("Year","FieldID"))
-dim(l578_rr_yield) #5042, 22
+dim(l578_rr_yield) #5042, 23
 l578_rr_yield$DOY <- as.numeric(strftime(l578_rr_yield$Date, format = "%j"))
 l578_rr_yield$plant_DOY <-  as.numeric(strftime(l578_rr_yield$plant_date, format = "%j"))
 l578_rr_yield$harv_DOY <-  as.numeric(strftime(l578_rr_yield$harv_date, format = "%j"))
@@ -2329,7 +2346,7 @@ ggplot(subset(l578_rr_yield, Year >= 2008), aes(x = Year, y = Yield)) + geom_poi
 names(l578_rr_yield)
 names(l578_county_month)
 
-l578_rr_month <- aggregate(subset(l578_rr_yield, Month %in% c(4:10))[,c("Blue","Green","Red","NIR","SWIR1","SWIR2","NDVI","EVI","EVI2","WDRVI","NDMI","NIRv")], by = list("Year" = subset(l578_rr_yield, Month %in% c(4:10))$Year, "FieldID" = subset(l578_rr_yield, Month %in% c(4:10))$FieldID, "Month" = subset(l578_rr_yield, Month %in% c(4:10))$Month), FUN = mean)
+l578_rr_month <- aggregate(subset(l578_rr_yield, Month %in% c(4:10))[,c("Blue","Green","Red","NIR","SWIR1","SWIR2","NDVI","EVI","EVI2","WDRVI","NDMI","GCI","NIRv")], by = list("Year" = subset(l578_rr_yield, Month %in% c(4:10))$Year, "FieldID" = subset(l578_rr_yield, Month %in% c(4:10))$FieldID, "Month" = subset(l578_rr_yield, Month %in% c(4:10))$Month), FUN = mean)
 #merge with yield 
 l578_rr_month_yield <- merge(l578_rr_month, yield_rr_9419, by = c("Year","FieldID"))
 dim(l578_rr_month_yield)
@@ -2388,14 +2405,19 @@ sum(is.na(weather_davis))
 weather_davis <- na.omit(weather_davis)
 #add DOY
 weather_davis$DOY <-as.numeric(strftime(weather_davis$Date, format = "%j"))
+#add VPD
+head(weather_davis)
+weather_davis$VPD <- RHtoVPD(RH = weather_davis$RH, TdegC = (weather_davis$MaxTemp+ weather_davis$MinTemp)/2)
+
 ```
 ###Monthly Average weather 
 ```{r}
-l578_rr_month <- aggregate(subset(l578_rr_yield, Month %in% c(4:10))[,c("Blue","Green","Red","NIR","SWIR1","SWIR2","NDVI","EVI","EVI2","WDRVI","NDMI","NIRv")], by = list("Year" = subset(l578_rr_yield, Month %in% c(4:10))$Year, "FieldID" = subset(l578_rr_yield, Month %in% c(4:10))$FieldID, "Month" = subset(l578_rr_yield, Month %in% c(4:10))$Month), FUN = mean)
+l578_rr_month <- aggregate(subset(l578_rr_yield, Month %in% c(4:10))[,c("Blue","Green","Red","NIR","SWIR1","SWIR2","NDVI","EVI","EVI2","WDRVI","NDMI","GCI","NIRv")], by = list("Year" = subset(l578_rr_yield, Month %in% c(4:10))$Year, "FieldID" = subset(l578_rr_yield, Month %in% c(4:10))$FieldID, "Month" = subset(l578_rr_yield, Month %in% c(4:10))$Month), FUN = mean)
 
-weather_rr_month <- aggregate(subset(weather_davis, Month %in% c(4:10))[,c("MaxTemp","MinTemp","RH","ETo","Precip","srad","vs")], by = list("Year"=subset(weather_davis, Month %in% c(4:10))$Year, "Month" = subset(weather_davis, Month %in% c(4:10))$Month), FUN = mean)
+weather_rr_month <- aggregate(subset(weather_davis, Month %in% c(4:10))[,c("MaxTemp","MinTemp","RH","ETo","Precip","srad","vs","VPD")], by = list("Year"=subset(weather_davis, Month %in% c(4:10))$Year, "Month" = subset(weather_davis, Month %in% c(4:10))$Month), FUN = mean)
+
 #convert long to wide 
-weather_rr_wide <- tidyr::pivot_wider(weather_rr_month, names_from = Month, values_from = MaxTemp:vs)
+weather_rr_wide <- tidyr::pivot_wider(weather_rr_month, names_from = Month, values_from = MaxTemp:VPD)
 head(weather_rr_month)
 head(weather_rr_wide)
 View(weather_rr_wide)
@@ -2442,12 +2464,11 @@ cor2 <- cor(weather_rr_month_yield$Yield, weather_rr_month_yield[,c(2:86)])
 View(t(cor2))
 ggscatter(weather_rr_month_yield, x = "MaxTemp_7", y = "Yield", add = "reg.line") +theme_bw() +  stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
 
-ggscatter(weather_rr_month_yield, x = "srad_6", y = "yield", add = "reg.line") +theme_bw() +  stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
+ggscatter(weather_rr_month_yield, x = "srad_6", y = "Yield", add = "reg.line") +theme_bw() +  stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
 
 ```
 
-#Calculate peak VIs 
-##Generate smoothed daily data
+#Generate smoothed daily data
 ```{r}
 dim(l578_rr_yield) #5334, 24
 sum(is.na(l578_rr_yield)) #0
@@ -2459,7 +2480,7 @@ ls_field_rr <- split(l578_rr_yield, l578_rr_yield$Year_Field)
 length(ls_field_rr)  #166
 
 ls_field_rr_smooth <- list()
-field_peak_rr <- data.frame("ID" = names(ls_field_rr), "Year" = 0, "peakT_EVI" = 0, "peakV_EVI"=0, "peakT_NDVI" = 0, "peakV_NDVI" = 0, "peakT_EVI2" = 0, "peakV_EVI2" = 0, "peakT_WDRVI" = 0, "peakV_WDRVI" = 0, "peakT_NDMI" = 0, "peakV_NDMI" = 0, "peakT_NIRv" = 0, "peakV_NIRv" = 0)
+field_peak_rr <- data.frame("ID" = names(ls_field_rr), "Year" = 0, "peakT_EVI" = 0, "peakV_EVI"=0, "peakT_NDVI" = 0, "peakV_NDVI" = 0, "peakT_EVI2" = 0, "peakV_EVI2" = 0, "peakT_WDRVI" = 0, "peakV_WDRVI" = 0, "peakT_NDMI" = 0, "peakV_NDMI" = 0, "peakT_GCI" = 0, "peakV_GCI"=0, "peakT_NIRv" = 0, "peakV_NIRv" = 0)
 field_peak_rr$Year <- sapply(strsplit(field_peak_rr$ID, split = "_"), '[', 1)
 field_peak_rr$FieldID1 <- sapply(strsplit(field_peak_rr$ID, split = "_"), '[', 2)
 field_peak_rr$FieldID2 <- sapply(strsplit(field_peak_rr$ID, split = "_"), '[', 3)
@@ -2474,11 +2495,11 @@ for(i in 1:length(ls_field_rr)){
   DOY <- as.numeric(strftime(df$Date, format = "%j"))
   #field_peak_rr$County[i] <- unique(df$County)
   #EVI
-  #EVI_filt <- sgolayfilt(df$EVI)
   EVI_filt <- df$EVI
   EVI_DOY <- cbind(1:365, NA)
   EVI_DOY[DOY, 2] <- EVI_filt
   EVI_smooth <- na_interpolation(x = EVI_DOY, option = "linear")
+  EVI_smooth[,2] <- sgolayfilt(EVI_smooth[,2])
   ls_field_rr_smooth[[i]] <- data.frame("DOY"=EVI_smooth[,1], "EVI" = EVI_smooth[,2])
   #ls_field_rr_smooth[[i]]$Area_acre <- unique(df$Area_acre)
   ls_field_rr_smooth[[i]]$Year <- unique(df$Year)
@@ -2488,56 +2509,69 @@ for(i in 1:length(ls_field_rr)){
   field_peak_rr$peakV_EVI[i] <- max(EVI_smooth_peak$EVI)
   field_peak_rr$peakT_EVI[i] <- which.max(EVI_smooth_peak$EVI)+150 
   #NDVI
-  #NDVI_filt <- sgolayfilt(df$NDVI)
   NDVI_filt <- df$NDVI
   NDVI_DOY <- cbind(1:365, NA)
   NDVI_DOY[DOY, 2] <- NDVI_filt
   NDVI_smooth <- na_interpolation(x = NDVI_DOY, option = "linear")
+  NDVI_smooth[,2] <- sgolayfilt(NDVI_smooth[,2])
   ls_field_rr_smooth[[i]]$NDVI <- NDVI_smooth[,2]
   NDVI_smooth_peak <- subset(ls_field_rr_smooth[[i]], DOY > 150 & DOY < 273)
   field_peak_rr$peakV_NDVI[i] <- max(NDVI_smooth_peak$NDVI)
   field_peak_rr$peakT_NDVI[i] <- which.max(NDVI_smooth_peak$NDVI)+150
   #EVI2
-  #EVI2_filt <- sgolayfilt(df$EVI2)
   EVI2_filt <- df$EVI2
   EVI2_DOY <- cbind(1:365, NA)
   EVI2_DOY[DOY, 2] <- EVI2_filt
   EVI2_smooth <- na_interpolation(x = EVI2_DOY, option = "linear")
+  EVI2_smooth[,2] <- sgolayfilt(EVI2_smooth[,2])
   ls_field_rr_smooth[[i]]$EVI2 <- EVI2_smooth[,2]
-  EVI2_smooth_peak <- subset(ls_field_filt2_smooth[[i]], DOY > 150 & DOY < 273)
+  EVI2_smooth_peak <- subset(ls_field_rr_smooth[[i]], DOY > 150 & DOY < 273)
   field_peak_rr$peakV_EVI2[i] <- max(EVI2_smooth_peak$EVI2)
   field_peak_rr$peakT_EVI2[i] <- which.max(EVI2_smooth_peak$EVI2)+150
   #WDRVI
-  #WDRVI_filt <- sgolayfilt(df$WDRVI)
   WDRVI_filt <- df$WDRVI
   WDRVI_DOY <- cbind(1:365, NA)
   WDRVI_DOY[DOY, 2] <- WDRVI_filt
   WDRVI_smooth <- na_interpolation(x = WDRVI_DOY, option = "linear")
+  WDRVI_smooth[,2] <- sgolayfilt(WDRVI_smooth[,2])
   ls_field_rr_smooth[[i]]$WDRVI <- WDRVI_smooth[,2]
-  WDRVI_smooth_peak <- subset(ls_field_filt2_smooth[[i]], DOY > 150 & DOY < 273)
+  WDRVI_smooth_peak <- subset(ls_field_rr_smooth[[i]], DOY > 150 & DOY < 273)
   field_peak_rr$peakV_WDRVI[i] <- max(WDRVI_smooth_peak$WDRVI)
   field_peak_rr$peakT_WDRVI[i] <- which.max(WDRVI_smooth_peak$WDRVI)+150
   #NDMI
-  #NDMI_filt <- sgolayfilt(df$NDMI)
   NDMI_filt <- df$NDMI
   NDMI_DOY <- cbind(1:365, NA)
   NDMI_DOY[DOY, 2] <- NDMI_filt
   NDMI_smooth <- na_interpolation(x = NDMI_DOY, option = "linear")
+  NDMI_smooth[,2] <- sgolayfilt(NDMI_smooth[,2])
   ls_field_rr_smooth[[i]]$NDMI <- NDMI_smooth[,2]
-  NDMI_smooth_peak <- subset(ls_field_filt2_smooth[[i]], DOY > 150 & DOY < 273)
+  NDMI_smooth_peak <- subset(ls_field_rr_smooth[[i]], DOY > 150 & DOY < 273)
   field_peak_rr$peakV_NDMI[i] <- max(NDMI_smooth_peak$NDMI)
   field_peak_rr$peakT_NDMI[i] <- which.max(NDMI_smooth_peak$NDMI)+150
+  #GCI
+  GCI_filt <- df$GCI
+  GCI_DOY <- cbind(1:365, NA)
+  GCI_DOY[DOY, 2] <- GCI_filt
+  GCI_smooth <- na_interpolation(x = GCI_DOY, option = "linear")
+  GCI_smooth[,2] <- sgolayfilt(GCI_smooth[,2])
+  ls_field_rr_smooth[[i]]$GCI <- GCI_smooth[,2]
+  GCI_smooth_peak <- subset(ls_field_rr_smooth[[i]], DOY > 150 & DOY < 273)
+  field_peak_rr$peakV_GCI[i] <- max(GCI_smooth_peak$GCI)
+  field_peak_rr$peakT_GCI[i] <- which.max(GCI_smooth_peak$GCI)+150
   #NIRv
-  #NIRv_filt <- sgolayfilt(df$NIRv)
   NIRv_filt <- df$NIRv
   NIRv_DOY <- cbind(1:365, NA)
   NIRv_DOY[DOY, 2] <- NIRv_filt
   NIRv_smooth <- na_interpolation(x = NIRv_DOY, option = "linear")
+  NIRv_smooth[,2] <- sgolayfilt(NIRv_smooth[,2])
   ls_field_rr_smooth[[i]]$NIRv <- NIRv_smooth[,2]
-  NIRv_smooth_peak <- subset(ls_field_filt2_smooth[[i]], DOY > 150 & DOY < 273)
+  NIRv_smooth_peak <- subset(ls_field_rr_smooth[[i]], DOY > 150 & DOY < 273)
   field_peak_rr$peakV_NIRv[i] <- max(NIRv_smooth_peak$NIRv)
   field_peak_rr$peakT_NIRv[i] <- which.max(NIRv_smooth_peak$NIRv)+150
 }
+names(ls_field_rr)
+names(ls_field_rr_smooth) <- names(ls_field_rr)
+
 
 head(field_peak_rr)
 tail(field_peak_rr)
@@ -2548,19 +2582,21 @@ summary(field_peak_rr$peakT_EVI)
 summary(field_peak_rr$peakV_EVI)
 hist(field_peak_rr$peakV_EVI)
 sum(field_peak_rr$peakV_EVI<0) #6
-sum(field_peak_rr$peakV_EVI<0.2) #165
-sum(field_peak_rr$peakV_EVI<0.3) #165
-sum(field_peak_rr$peakV_EVI<0.4) #47
+sum(field_peak_rr$peakV_EVI<0.2) #0
+sum(field_peak_rr$peakV_EVI<0.3) #1
+sum(field_peak_rr$peakV_EVI<0.4) #22
 sum(field_peak_rr$peakV_NDVI<0.4) #0
-sum(field_peak_rr$peakV_NDVI<0.5) #10
+sum(field_peak_rr$peakV_NDVI<0.5) #7
 
 sum(field_peak_rr$peakV_EVI<=0.3) #0
 sum(field_peak_rr$peakT_EVI==151) #606
 sum(field_peak_rr$peakT_EVI==272) #1
 
 #add name to the list
-names(ls_field_rr)
-names(ls_field_rr_smooth) <- names(ls_field_rr)
+
+#when is the peak T of VIs
+hist(field_peak_rr$peakT_EVI)
+hist(field_peak_rr$peakT_EVI2)
 
 ```
 
@@ -2573,7 +2609,7 @@ dim(yield_rr_9419)  #364,8
 View(field_peak_rr_yield)
 
 #names(field_peak_rr_yield)[21] <- "Yield"
-cor3 <- cor(field_peak_rr_yield$Yield, field_peak_rr_yield[,c(4:15)])
+cor3 <- cor(field_peak_rr_yield$Yield, field_peak_rr_yield[,c(4:17)])
 View(t(cor3))
 #p1 = ggscatter(county_peak_monthweighted_yield, x = "peakV_NIRv", y = "Yield", add = "reg.line") + theme_bw() + stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
 
@@ -2584,7 +2620,7 @@ View(t(cor3))
 names(field_peak_rr)
 ggplot(field_peak_rr, aes(x = peakT_EVI, y = peakV_EVI)) + geom_point()
 dim(field_peak_rr)
-ggscatter(field_peak_rr_yield, x = "peakV_EVI", y = "Yield", add = "reg.line") + theme_bw() +  stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
+ggscatter(field_peak_rr_yield, x = "peakV_NIRv", y = "Yield", add = "reg.line") + theme_bw() +  stat_cor(aes(label =  paste(..rr.label.., ..p.label.., sep = "~`,`~"))) + ylab("Yield (tons/acre)")
 ggscatter(field_peak_rr_yield, x = "peakV_NDVI", y = "Yield")
 ggscatter(field_peak_rr_yield, x = "peakV_NIRv", y = "Yield") 
 ggscatter(field_peak_rr_yield, x = "peakV_NDVI", y = "Yield")
@@ -2611,14 +2647,14 @@ for(i in 1:length(ls_field_rr_smooth)){
   ls_field_rr_smooth[[i]] <- df
 }
 df_field_rr_smooth <- do.call(rbind, ls_field_rr_smooth)
-dim(df_field_rr_smooth)  #60590,10
-length(ls_field_rr_smooth)  #166
+dim(df_field_rr_smooth)  #60590,11
+length(ls_field_rr_smooth)  #167
 dim(subset(yield_rr_9419, Year >= 2008)) #167,6
 
 #merge with yield data
 df_field_rr_yield <- base::merge(df_field_rr_smooth, yield_rr_9419, by = c("Year", "FieldID", "Year_Field"))
-dim(df_field_rr_smooth) #60590,10
-dim(df_field_rr_yield)  #60590, 13
+dim(df_field_rr_smooth) #60595,11
+dim(df_field_rr_yield)  #60595, 14
 head(df_field_rr_yield)
 
 
@@ -2632,6 +2668,10 @@ plant_harv_date_rr <- merge(plantdate_rr, harvdate_rr, by = "Year")
 
 ggplot(plant_harv_date_rr, aes(x = Year, y = harv_date_DOY)) + geom_point() + geom_point(aes(x = Year, y = plant_date_DOY), color = "red") + theme_bw() + ylab("DOY")
 
+mean(plant_harv_date_rr$plant_date_DOY)  #121
+mean(plant_harv_date_rr$harv_date_DOY)  #247
+
+
 plant_harv_date_rr$grow_length <- plant_harv_date_rr$harv_date_DOY - plant_harv_date_rr$plant_date_DOY
 
 ggplot(plant_harv_date_rr, aes(x = Year, y = grow_length))+ geom_point() + ylab("DOY")
@@ -2642,11 +2682,26 @@ ggplot(plant_harv_date_rr, aes(x = Year, y = grow_length))+ geom_point() + ylab(
 ###Plot the time sereis VIs
 ```{r}
 head(df_field_rr_yield)
-ggplot(subset(df_field_rr_yield, Year == 2019 & DOY > 100 & DOY < 300), aes(x = DOY, y = NDVI, color = FieldID)) + geom_point(size = 0.1) + geom_smooth(se = FALSE) + theme_bw()# + facet_wrap()
+ggplot(subset(df_field_rr_yield, Year == 2019 & DOY > 100 & DOY < 300), aes(x = DOY, y = NDVI, color = FieldID)) + geom_point(size = 0.1) + theme_bw() + facet_wrap(~FieldID)
 
-ggplot(subset(df_field_rr_yield, Year == 2019 & DOY > 100 & DOY < 300), aes(x = DOY, y = NDVI, color = FieldID)) + geom_point(size = 0.05) + geom_smooth(se = FALSE) + theme_bw()+ facet_wrap(~FieldID) + geom_vline(xintercept = 121) + geom_vline(xintercept = 250)
 
-ggplot(subset(l578_rr_yield, Year == 2019 & DOY > 100 & DOY < 300), aes(x = DOY, y = NDVI, color = FieldID)) + geom_point()  + theme_bw()+ facet_wrap(~FieldID) + geom_vline(xintercept = 121) + geom_vline(xintercept = 250)
+#point only 
+ggplot(subset(l578_rr_yield, Year == 2019 & DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, color = FieldID)) + geom_point()  + theme_bw()+ facet_wrap(~FieldID) + geom_vline(data = subset(l578_rr_yield, Year == 2019), aes(xintercept = plant_DOY)) + geom_vline(data = subset(l578_rr_yield, Year == 2019), aes(xintercept = harv_DOY)) + theme(legend.position = "none")
+ggplot(subset(l578_rr_yield, Year == 2018 & DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, color = FieldID)) + geom_point()  + theme_bw()+ facet_wrap(~FieldID) + geom_vline(data = subset(l578_rr_yield, Year == 2018), aes(xintercept = plant_DOY)) + geom_vline(data = subset(l578_rr_yield, Year == 2018), aes(xintercept = harv_DOY)) + theme(legend.position = "none")
+ggplot(subset(l578_rr_yield, Year == 2017 & DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, color = FieldID)) + geom_point()  + theme_bw()+ facet_wrap(~FieldID) + geom_vline(data = subset(l578_rr_yield, Year == 2017), aes(xintercept = plant_DOY)) + geom_vline(data = subset(l578_rr_yield, Year == 2017), aes(xintercept = harv_DOY)) + theme(legend.position = "none")
+ggplot(subset(l578_rr_yield, Year == 2016 & DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, color = FieldID)) + geom_point()  + theme_bw()+ facet_wrap(~FieldID) + geom_vline(data = subset(l578_rr_yield, Year == 2016), aes(xintercept = plant_DOY)) + geom_vline(data = subset(l578_rr_yield, Year == 2016), aes(xintercept = harv_DOY)) + theme(legend.position = "none")
+ggplot(subset(l578_rr_yield, Year == 2015 & DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, color = FieldID)) + geom_point()  + theme_bw()+ facet_wrap(~FieldID) + geom_vline(data = subset(l578_rr_yield, Year == 2015), aes(xintercept = plant_DOY)) + geom_vline(data = subset(l578_rr_yield, Year == 2015), aes(xintercept = harv_DOY)) + theme(legend.position = "none")
+ggplot(subset(l578_rr_yield, Year == 2014 & DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, color = FieldID)) + geom_point()  + theme_bw()+ facet_wrap(~FieldID) + geom_vline(data = subset(l578_rr_yield, Year == 2014), aes(xintercept = plant_DOY)) + geom_vline(data = subset(l578_rr_yield, Year == 2014), aes(xintercept = harv_DOY)) + theme(legend.position = "none")
+
+#smoothed lines
+ggplot(subset(df_field_rr_yield, Year == 2015 & DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, color = FieldID)) + geom_line()  + theme_bw()+ facet_wrap(~FieldID) + ggtitle("2015 Daily Smoothed EVI in RR")# + geom_vline(data = subset(df_field_rr_yield_weather, Year == 2015), aes(xintercept = plant_DOY)) + geom_vline(data = subset(df_field_rr_yield_weather, Year == 2015), aes(xintercept = harv_DOY)) + theme(legend.position = "none")
+ggplot(subset(df_field_rr_yield_weather, Year == 2014 & DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, color = FieldID)) + geom_line()  + theme_bw()+ facet_wrap(~FieldID) + geom_vline(data = subset(df_field_rr_yield_weather, Year == 2014), aes(xintercept = plant_DOY)) + geom_vline(data = subset(df_field_rr_yield_weather, Year == 2014), aes(xintercept = harv_DOY)) + theme(legend.position = "none")
+
+ggplot(subset(df_field_rr_yield_weather, Year == 2009 & DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, color = FieldID)) + geom_line()  + theme_bw()+ facet_wrap(~FieldID) + geom_vline(data = subset(df_field_rr_yield_weather, Year == 2009), aes(xintercept = plant_DOY)) + geom_vline(data = subset(df_field_rr_yield_weather, Year == 2009), aes(xintercept = harv_DOY)) + theme(legend.position = "none")
+
+#DAT
+ggplot(subset(df_field_rr_yield_weather, Year == 2014 & DOY > 100 & DOY < 300), aes(x = DAT, y = EVI, color = FieldID)) + geom_line()  + theme_bw()+ facet_wrap(~FieldID)+ theme(legend.position = "none") + ggtitle("2014 RR")
+
 
 ggplot(subset(l578_rr_yield, Year == 2019 & DOY > 100 & DOY < 300), aes(x = DOY, y = EVI, color = FieldID)) + geom_point()  + theme_bw()+ geom_vline(xintercept = 121, color = "darkgreen") + geom_vline(xintercept = 250, color = "brown") 
 
@@ -2662,8 +2717,6 @@ ggplot(subset(df_field_smooth))
 
 head(l578_rr_yield) 
 
-cor4 <- l578_rr_yield %>% group_by(Year) %>% summarise(cor(Yield, NDVI))
-cor4 <- data.frame()
 
 head(df_field_rr_yield)
 head(df_field_rr_smooth)
@@ -2675,7 +2728,7 @@ ggplot(subset(l578_rr_yield, Year == 2019 & DOY > 100 & DOY < 300), aes(x = DOY,
 
 
 ```
-###Merge daily VIs with weather data
+###Add more information to the daily VIs
 ```{r}
 head(df_field_rr_yield)
 head(weather_davis)
@@ -2683,36 +2736,242 @@ head(gdd_daily_rr)
 dim(df_field_rr_yield)  #60955,13
 dim(weather_davis)  #4351,11
 
+#weather data 
 df_field_rr_yield_weather <- merge(df_field_rr_yield, weather_davis, by = c("Year","DOY"))
 head(df_field_rr_yield_weather)
-dim(df_field_rr_yield_weather)  #60524,22
+dim(df_field_rr_yield_weather)  #60524,24
 df_field_rr_yield_weather <- merge(df_field_rr_yield_weather, gdd_daily_rr[,c("Year","GDD","DOY")], by = c("Year","DOY"))
 head(df_field_rr_yield_weather)
-dim(df_field_rr_yield_weather)  #60524,23
+dim(df_field_rr_yield_weather)  #60524,25
 
-
-a <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% arrange(DOY) %>% summarise(EVI_cum = cumsum(EVI),NDVI_cum = cumsum(NDVI),EVI2_cum = cumsum(EVI2),WDRVI_cum = cumsum(WDRVI),NDMI_cum = cumsum(NDMI), NIRv_cum = cumsum(NIRv), srad_sum = cumsum(srad), Year = Year, DOY = DOY)
-
-dim(a) #60524,9
-head(a)
-
-df_field_rr_yield_weather <- merge(df_field_rr_yield_weather, a, by = c("Year_Field","Year","DOY"))
-dim(df_field_rr_yield_weather) 
-head(df_field_rr_yield_weather)
-
+#add plant_DOY and harv_DOY
 df_field_rr_yield_weather$plant_DOY <- as.numeric(strftime(df_field_rr_yield_weather$plant_date, format = "%j"))
 df_field_rr_yield_weather$harv_DOY <- as.numeric(strftime(df_field_rr_yield_weather$harv_date, format = "%j"))
 
-subset(df_field_rr_yield_weather, DOY>plant_DOY)
+#add cumulative VIs
+temp <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(DOY >= plant_DOY & DOY <= harv_DOY) %>% arrange(DOY) %>% summarise(EVI_cum = cumsum(EVI),NDVI_cum = cumsum(NDVI),EVI2_cum = cumsum(EVI2),WDRVI_cum = cumsum(WDRVI),NDMI_cum = cumsum(NDMI), GCI_cum = cumsum(GCI),NIRv_cum = cumsum(NIRv), srad_sum = cumsum(srad), Year = Year, DOY = DOY)
+dim(temp) #20493,10
+head(temp)
+df_field_rr_yield_weather <- merge(df_field_rr_yield_weather, temp, by = c("Year_Field","Year","DOY"))
+dim(df_field_rr_yield_weather) #20827
+head(df_field_rr_yield_weather) 
+
+##DAT
+temp3 <- df_field_rr_yield_weather  %>% group_by(Year_Field) %>% summarise(DOY  = DOY, DAT = DOY - plant_DOY)
+df_field_rr_yield_weather <- base::merge(df_field_rr_yield_weather, temp3, by = c("Year_Field","DOY"))
+dim(df_field_rr_yield_weather)  #20827,43
+head(df_field_rr_yield_weather)
+
+#calculate initial GDD and VIs at transplanting date
+temp2 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(DAT == 0) %>% summarise(plant_GDD = GDD, plant_srad = srad_sum, plant_EVI = EVI, plant_NDVI = NDVI, plant_EVI2 = EVI2, plant_WDRVI = WDRVI, plant_NDMI = NDMI, plant_GCI = GCI,plant_NIRv = NIRv)
+dim(temp2) #167, 2
+temp2
+par(mfrow = c(2,3))
+hist(temp2$plant_EVI,xlab="EVI", main = "Histogram of EVI at Transplanting Date")
+hist(temp2$plant_NDVI,xlab="NDVI", main = "Histogram of NDVI at Transplanting Date")
+hist(temp2$plant_EVI2,xlab="EVI2", main = "Histogram of EVI2 at Transplanting Date")
+hist(temp2$plant_WDRVI,xlab="WDRVI", main = "Histogram of WDRVI at Transplanting Date")
+hist(temp2$plant_NDMI,xlab="NDMI", main = "Histogram of NDMI at Transplanting Date")
+hist(temp2$plant_NIRv,xlab="NIRv", main = "Histogram of NIRv at Transplanting Date")
+#merge together 
+df_field_rr_yield_weather <- merge(df_field_rr_yield_weather, temp2, by = c("Year_Field"))
+dim(df_field_rr_yield_weather) #20827,45
+names(df_field_rr_yield_weather)
+
+#Calculate GDD_at and srad_at
+temp4 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% summarise(DOY = DOY, GDD_AT = GDD - plant_GDD, srad_AT = srad_sum - plant_srad)
+df_field_rr_yield_weather <- merge(df_field_rr_yield_weather, temp4, by = c("Year_Field","DOY"))
+dim(df_field_rr_yield_weather) #20827,47
+head(df_field_rr_yield_weather)
+
+#Output the results
+path_df
+write.csv(df_field_rr_yield_weather,file.path(path_df, "df_field_rr_yield_weather.csv"), row.names = FALSE)
 ```
 
-###Cumulative VIs
+#Correlation analysis: 
+##Time series of VIs with Yield
 ```{r}
-class(df_field_rr_yield_weather$plant_date)
-as.numeric(strftime(df$Date, format = "%j"))
 
-b <- df_field_rr_yield_weather %>% group_by(Year) %>% summarise(cor(Yield, NDVI))
+dim(df_field_rr_yield_weather) #20827,47
 
+#all together 
+cor_vis_all <- df_field_rr_yield_weather %>% group_by(DAT) %>% summarise(EVI_cor = cor(EVI, Yield), NDVI_cor = cor(NDVI, Yield), EVI2_cor = cor(EVI2, Yield), WDRVI_cor = cor(WDRVI, Yield), NDMI_cor = cor(NDMI, Yield), GCI_cor = cor(GCI, Yield),NIRv_cor = cor(NIRv, Yield))
+dim(cor_vis_all) #152,8
+p1 <- ggplot(cor_vis_all, aes(x = DAT, y = EVI_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("EVI vs Yield") + ylim(c(-0.4,0.65))
+p2 <- ggplot(cor_vis_all, aes(x = DAT, y = NDVI_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("NDVI vs Yield")+ ylim(c(-0.4,0.65))
+p3 <- ggplot(cor_vis_all, aes(x = DAT, y = EVI2_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("EVI2 vs Yield")+ ylim(c(-0.4,0.65))
+p4 <- ggplot(cor_vis_all, aes(x = DAT, y = WDRVI_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("WDRVI vs Yield")+ ylim(c(-0.4,0.65))
+p5 <- ggplot(cor_vis_all, aes(x = DAT, y = NDMI_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("NDMI vs Yield")+ ylim(c(-0.4,0.65))
+p6 <- ggplot(cor_vis_all, aes(x = DAT, y = GCI_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("GCI vs Yield") + ylim(c(-0.4,0.65))
+p6
+p7 <- ggplot(cor_vis_all, aes(x = DAT, y = NIRv_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("NIRv vs Yield") + ylim(c(-0.4,0.65))
+grid.arrange(p1,p2,p3,p4,p5,p6,p7)
+#what date is the maximal 
+subset(cor_vis_all, DAT <= 120)[which.max(subset(cor_vis_all, DAT<=120)$EVI_cor),] #76
+subset(cor_vis_all, DAT <= 120)[which.max(subset(cor_vis_all, DAT<=120)$NDVI_cor),] #76
+subset(cor_vis_all, DAT <= 120)[which.max(subset(cor_vis_all, DAT<=120)$EVI2_cor),] #76
+subset(cor_vis_all, DAT <= 120)[which.max(subset(cor_vis_all, DAT<=120)$WDRVI_cor),] #61
+subset(cor_vis_all, DAT <= 120)[which.max(subset(cor_vis_all, DAT<=120)$NDMI_cor),] #87
+subset(cor_vis_all, DAT <= 120)[which.max(subset(cor_vis_all, DAT<=120)$GCI_cor),] #61
+subset(cor_vis_all, DAT <= 120)[which.max(subset(cor_vis_all, DAT<=120)$NIRv_cor),] #76
+#what date is the maximal VI
+subset(df)
+
+#What's the GDD at DAT76
+ggplot(subset(df_field_rr_yield_weather, DAT==76), aes(x = Year, y = GDD_AT)) + geom_point() + xlab("Year") + ylab("GDD") + theme_bw() + geom_hline(aes(yintercept =median(GDD_AT)), linetype = "dashed") + ggtitle("Accumulated GDD at DAT76")
+
+
+
+
+
+#split them into different years
+cor_vis_yearly <- df_field_rr_yield_weather %>% group_by(DAT, Year) %>% summarise(EVI_cor = cor(EVI, Yield), NDVI_cor = cor(NDVI, Yield), EVI2_cor = cor(EVI2, Yield), WDRVI_cor = cor(WDRVI, Yield), NDMI_cor = cor(NDMI, Yield), NIRv_cor = cor(NIRv, Yield))
+#EVI
+ggplot(cor_vis_yearly, aes(x = DAT, y = EVI_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey")+ geom_vline(xintercept = 75, color = "darkgrey")+ xlim(c(0,120)) + ggtitle("EVI vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R")
+#NDVI
+ggplot(cor_vis_yearly, aes(x = DAT, y = NDVI_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey")+ geom_vline(xintercept = 75, color = "darkgrey")+ xlim(c(0,120)) + ggtitle("NDVI vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R")
+#EVI2
+ggplot(cor_vis_yearly, aes(x = DAT, y = EVI2_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey")+ geom_vline(xintercept = 75, color = "darkgrey")+ xlim(c(0,120)) + ggtitle("EVI2 vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R")
+#WDRVI
+ggplot(cor_vis_yearly, aes(x = DAT, y = WDRVI_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey")+ geom_vline(xintercept = 75, color = "darkgrey")+ xlim(c(0,120)) + ggtitle("WDRVI vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R")
+#NDMI 
+ggplot(cor_vis_yearly, aes(x = DAT, y = NDMI_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey")+ geom_vline(xintercept = 75, color = "darkgrey")+ xlim(c(0,120)) + ggtitle("NDMI vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R")
+#NIRv
+ggplot(cor_vis_yearly, aes(x = DAT, y = NIRv_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey")+ geom_vline(xintercept = 75, color = "darkgrey")+ xlim(c(0,120)) + ggtitle("NIRv vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R")
+
+
+
+
+
+
+#change x-axis to GDD
+cor_vis_yearly_gdd <- df_field_rr_yield_weather %>% group_by(GDD_AT, Year) %>% summarise(EVI_cor = cor(EVI, Yield), NDVI_cor = cor(NDVI, Yield), EVI2_cor = cor(EVI2, Yield), WDRVI_cor = cor(WDRVI, Yield), NDMI_cor = cor(NDMI, Yield), NIRv_cor = cor(NIRv, Yield))
+#EVI
+ggplot(cor_vis_yearly_gdd, aes(x =GDD_AT, y = EVI_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey", linetype = "dashed") + geom_vline(xintercept = 800, color = "darkgrey", linetype = "dashed") + geom_vline(xintercept = 400, color = "darkgrey", linetype = "dashed") +geom_vline(xintercept = 300, color = "darkgrey", linetype = "dashed")+ ggtitle("EVI vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R") + xlab("Accumulated GDD after Transplanting") + xlim(c(0,1300)) 
+#NDVI
+ggplot(cor_vis_yearly_gdd, aes(x =GDD_AT, y = NDVI_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey", linetype = "dashed") + geom_vline(xintercept = 800, color = "darkgrey", linetype = "dashed") + geom_vline(xintercept = 400, color = "darkgrey", linetype = "dashed") +geom_vline(xintercept = 300, color = "darkgrey", linetype = "dashed")+ ggtitle("NDVI vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R") + xlab("Accumulated GDD after Transplanting") + xlim(c(0,1300)) 
+#NIRv
+ggplot(cor_vis_yearly_gdd, aes(x =GDD_AT, y = NIRv_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey", linetype = "dashed") + geom_vline(xintercept = 800, color = "darkgrey", linetype = "dashed") + geom_vline(xintercept = 400, color = "darkgrey", linetype = "dashed") +geom_vline(xintercept = 300, color = "darkgrey", linetype = "dashed")+ ggtitle("NIRv vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R") + xlab("Accumulated GDD after Transplanting") + xlim(c(0,1300)) 
+```
+
+##Entire Cumulative VIs
+```{r}
+#all together 
+cor_viscum_all <- df_field_rr_yield_weather %>% group_by(DAT) %>% summarise(EVIcum_cor = cor(EVI_cum, Yield), NDVIcum_cor = cor(NDVI_cum, Yield), EVI2cum_cor = cor(EVI2_cum, Yield), WDRVIcum_cor = cor(WDRVI_cum, Yield), NDMIcum_cor = cor(NDMI_cum, Yield),GCIcum_cor = cor(GCI_cum, Yield), NIRvcum_cor = cor(NIRv_cum, Yield))
+dim(cor_viscum_all)  #152,8
+
+p1 <- ggplot(cor_viscum_all, aes(x = DAT, y = EVIcum_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("Cumulative EVI vs Yield") + ylim(c(-0.4,0.65))
+p2 <- ggplot(cor_viscum_all, aes(x = DAT, y = NDVIcum_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("Cumulative NDVI vs Yield")+ ylim(c(-0.4,0.65))
+p3 <- ggplot(cor_viscum_all, aes(x = DAT, y = EVI2cum_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("Cumulative EVI2 vs Yield")+ ylim(c(-0.4,0.65))
+p4 <- ggplot(cor_viscum_all, aes(x = DAT, y = WDRVIcum_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("Cumulative WDRVI vs Yield")+ ylim(c(-0.4,0.65))
+p5 <- ggplot(cor_viscum_all, aes(x = DAT, y = NDMIcum_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("Cumulative NDMI vs Yield")+ ylim(c(-0.4,0.65))
+p6 <- ggplot(cor_viscum_all, aes(x = DAT, y = GCIcum_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("Cumulative GCI vs Yield") + ylim(c(-0.4,0.65))
+p7 <- ggplot(cor_viscum_all, aes(x = DAT, y = NIRvcum_cor)) + geom_line() + xlim(c(0,120)) + theme_bw() + ylab("R") + ggtitle("Cumulative NIRv vs Yield") + ylim(c(-0.4,0.65))
+grid.arrange(p1,p2,p3,p4,p5,p6,p7)
+
+
+#split them into different years
+cor_viscum_yearly <- df_field_rr_yield_weather %>% group_by(DAT, Year) %>% summarise(EVIcum_cor = cor(EVI_cum, Yield), NDVIcum_cor = cor(NDVI_cum, Yield), EVI2cum_cor = cor(EVI2_cum, Yield), WDRVIcum_cor = cor(WDRVI_cum, Yield), NDMIcum_cor = cor(NDMI_cum, Yield), GCIcum_cor = cor(GCI_cum, Yield),NIRvcum_cor = cor(NIRv_cum, Yield))
+#EVI
+ggplot(cor_viscum_yearly, aes(x = DAT, y = EVIcum_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey")+ geom_vline(xintercept = 76, color = "darkgrey")+ xlim(c(0,120)) + ggtitle("Cumulative EVI vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R")
+#NDVI
+ggplot(cor_viscum_yearly, aes(x = DAT, y = NDVIcum_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey")+ geom_vline(xintercept = 76, color = "darkgrey")+ xlim(c(0,120)) + ggtitle("Cumulative NDVI vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R")
+#EVI2
+ggplot(cor_viscum_yearly, aes(x = DAT, y = EVI2cum_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey")+ geom_vline(xintercept = 75, color = "darkgrey")+ xlim(c(0,120)) + ggtitle("Cumulative EVI2 vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R")
+#WDRVI
+ggplot(cor_viscum_yearly, aes(x = DAT, y = WDRVIcum_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey")+ geom_vline(xintercept = 75, color = "darkgrey")+ xlim(c(0,120)) + ggtitle("Cumulative WDRVI vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R")
+#NDMI 
+ggplot(cor_viscum_yearly, aes(x = DAT, y = NDMIcum_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey")+ geom_vline(xintercept = 75, color = "darkgrey")+ xlim(c(0,120)) + ggtitle("Cumulative NDMI vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R")
+#GCI
+ggplot(cor_viscum_yearly, aes(x = DAT, y = GCIcum_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey")+ geom_vline(xintercept = 75, color = "darkgrey")+ xlim(c(0,120)) + ggtitle("Cumulative GCI vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R")
+#NIRv
+ggplot(cor_viscum_yearly, aes(x = DAT, y = NIRvcum_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey")+ geom_vline(xintercept = 75, color = "darkgrey")+ xlim(c(0,120)) + ggtitle("Cumulative NIRv vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R")
+
+
+
+#change x-axis to GDD
+cor_viscum_yearly_gdd <- df_field_rr_yield_weather %>% group_by(GDD_AT, Year) %>% summarise(EVIcum_cor = cor(EVI_cum, Yield), NDVI_cor = cor(NDVI_cum, Yield), EVI2cum_cor = cor(EVI2_cum, Yield), WDRVIcum_cor = cor(WDRVI_cum, Yield), NDMIcum_cor = cor(NDMI_cum, Yield), NIRvcum_cor = cor(NIRv_cum, Yield))
+#EVI
+ggplot(cor_viscum_yearly_gdd, aes(x =GDD_AT, y = EVIcum_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey", linetype = "dashed") + geom_vline(xintercept = 800, color = "darkgrey", linetype = "dashed") + geom_vline(xintercept = 400, color = "darkgrey", linetype = "dashed") +geom_vline(xintercept = 300, color = "darkgrey", linetype = "dashed")+ ggtitle("EVI vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R") + xlab("Accumulated GDD after Transplanting") + xlim(c(0,1300)) 
+#NDVI
+ggplot(cor_viscum_yearly_gdd, aes(x =GDD_AT, y = NDVI_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey", linetype = "dashed") + geom_vline(xintercept = 800, color = "darkgrey", linetype = "dashed") + geom_vline(xintercept = 400, color = "darkgrey", linetype = "dashed") +geom_vline(xintercept = 300, color = "darkgrey", linetype = "dashed")+ ggtitle("NDVI vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R") + xlab("Accumulated GDD after Transplanting") + xlim(c(0,1300)) 
+#NIRv
+ggplot(cor_viscum_yearly_gdd, aes(x =GDD_AT, y = NIRv_cor, color = Year)) + geom_line()  + geom_hline(yintercept = 0, color = "darkgrey", linetype = "dashed") + geom_vline(xintercept = 800, color = "darkgrey", linetype = "dashed") + geom_vline(xintercept = 400, color = "darkgrey", linetype = "dashed") +geom_vline(xintercept = 300, color = "darkgrey", linetype = "dashed")+ ggtitle("NIRv vs Yield") + facet_wrap(~Year) + theme_bw() + theme(legend.position = "none") + ylab("R") + xlab("Accumulated GDD after Transplanting") + xlim(c(0,1300)) 
+
+
+```
+
+##Optimal Period Cumulative VIs
+```{r}
+ls_temp <- split(df_field_rr_yield_weather, df_field_rr_yield_weather$Year_Field)
+length(ls_temp) #167
+for(i in 1:167){
+  #empty dataframe 
+  df <- data.frame(matrix(0, nrow = 120, ncol = 120))
+  for(j in 1:120){
+    df[j,] <- c(ls_temp[[i]]$NIRv_cum[j:120], rep(NA, j-1))
+  }
+  #add columns 
+  df$Year_Field <- unique((ls_temp[[i]]$Year_Field))
+  df$Year <- unique(ls_temp[[i]]$Year)
+  df$FieldID <- unique(ls_temp[[i]]$FieldID)
+  df$Yield <- unique(ls_temp[[i]]$Yield)
+  df$Initial <- 1:120
+  #convert wide to long 
+  df_long <- tidyr::pivot_longer(df, cols = X1:X120, names_to = "Interval", values_to = "NIRv_cum")
+  ls_temp[[i]] <- df_long
+}
+df_temp <- do.call(rbind, ls_temp)
+dim(df_temp)  #2404800, 7
+head(df_temp)
+
+df_temp$Period <- paste(df_temp$Initial, df_temp$Interval, sep = "")
+
+head(df_temp)
+
+cor_visperiod_all <- df_temp %>% group_by(Period) %>% summarise (NIRv_cor = cor(NIRv_cum, Yield))
+cor_visperiod_all$Initial <- as.numeric(sapply(strsplit(cor_visperiod_all$Period, split = "X"), '[', 1))
+cor_visperiod_all$Interval <- as.numeric(sapply(strsplit(cor_visperiod_all$Period, split = "X"), '[', 2))
+
+raster(cor_visperiod_all)
+
+r <- cor_visperiod_all[,c("Initial","Interval","NDVI_cor")]
+head(r)
+r <- rasterFromXYZ(r)
+par(mfrow = c(1,1))
+plot(r)
+
+ggplot(cor_visperiod_all, aes(x = Initial, y = Interval, fill = NIRv_cor)) + geom_raster() + scale_fill_gradientn(colors = rainbow(5, rev = TRUE)) + theme_minimal() #+ theme_void()  + geom_contour(aes(z = NDVI_cor)  )
+
+head(cor_visperiod_all[order(cor_visperiod_all$NDVI_cor, decreasing = TRUE),])
+#------------------Yearly---------------------
+
+cor_visperiod_yearly <- df_temp %>% group_by(Period, Year) %>% summarise(NIRv_cor = cor(NIRv_cum, Yield))
+cor_visperiod_yearly$Initial <- as.numeric(sapply(strsplit(cor_visperiod_yearly$Period, split = "X"), '[', 1))
+cor_visperiod_yearly$Interval <- as.numeric(sapply(strsplit(cor_visperiod_yearly$Period, split = "X"), '[', 2))
+head(cor_visperiod_yearly)
+
+ggplot(cor_visperiod_yearly, aes(x = Initial, y = Interval)) + geom_raster(aes(fill = NIRv_cor)) + scale_fill_gradientn(colors = rainbow(5, rev = TRUE)) + theme_minimal() + facet_wrap(~Year)# + geom_contour(aes(z = NDVI_cor))
+
+
+#----------------average instead of cumulatuve--------------------
+head(df_temp)
+df_temp$Interval <- as.numeric(sub("X","", df_temp$Interval))
+df_temp$NIRv_mean <- df_temp$NIRv_cum/df_temp$Interval
+
+
+cor_visperiodmean_all <- df_temp %>% group_by(Period) %>% summarise (NIRv_cor = cor(NIRv_cum, Yield))
+cor_visperiod_all$Initial <- as.numeric(sapply(strsplit(cor_visperiod_all$Period, split = "X"), '[', 1))
+cor_visperiod_all$Interval <- as.numeric(sapply(strsplit(cor_visperiod_all$Period, split = "X"), '[', 2))
+
+
+cor_visperiodmean_yearly <- df_temp %>% group_by(Period, Year) %>% summarise(NIRv_cor = cor(NIRv_mean, Yield))
+cor_visperiodmean_yearly$Initial <- as.numeric(sapply(strsplit(cor_visperiod_yearly$Period, split = "X"), '[', 1))
+cor_visperiodmean_yearly$Interval <- as.numeric(sapply(strsplit(cor_visperiod_yearly$Period, split = "X"), '[', 2))
+head(cor_visperiod_yearly)
+
+ggplot(cor_visperiodmean_yearly, aes(x = Initial, y = Interval)) + geom_raster(aes(fill = NIRv_cor)) + scale_fill_gradientn(colors = rainbow(5, rev = TRUE)) + theme_minimal() + facet_wrap(~Year)# + geom_contour(aes(z = NDVI_cor))
 
 ```
 
@@ -2766,48 +3025,316 @@ hist(peakdate_rr$GDD_cum, xlab = "Growing Degree Days", main = "Histogram of GDD
 abline(v = 800, col = "red")
 ```
 
-##Cumulative VIs
+#Extract features 
+##Period average VIs
 ```{r}
-head(weather_davis)
-head(weather_)
+#GDD: 0-400
+a1 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(GDD_AT < 400) %>% summarise(EVI_400 = mean(EVI), NDVI_400 = mean(NDVI), EVI2_400 = mean(EVI2), WDRVI_400=mean(WDRVI), NDMI_400=mean(NDMI), GCI_400=mean(GCI), NIRv_400= mean(NIRv))
+#GDD: 0-800
+a2 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(GDD_AT < 800) %>% summarise(EVI_800 = mean(EVI), NDVI_800 = mean(NDVI), EVI2_800 = mean(EVI2), WDRVI_800=mean(WDRVI), NDMI_800=mean(NDMI), GCI_800=mean(GCI), NIRv_800= mean(NIRv))
+#GDD: 0-1300
+a3 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(GDD_AT < 1300) %>% summarise(EVI_1300 = mean(EVI), NDVI_1300 = mean(NDVI), EVI2_1300 = mean(EVI2), WDRVI_1300=mean(WDRVI), NDMI_1300=mean(NDMI), GCI_1300=mean(GCI), NIRv_1300= mean(NIRv)) 
+#GDD: 400-800
+a4 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(GDD_AT > 400 & GDD_AT < 800) %>% summarise(EVI_400800 = mean(EVI), NDVI_400800 = mean(NDVI), EVI2_400800 = mean(EVI2), WDRVI_400800=mean(WDRVI), NDMI_400800=mean(NDMI), GCI_400800=mean(GCI), NIRv_400800= mean(NIRv))
+#GDD: 800-1300
+a5 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(GDD_AT > 800 & GDD_AT < 1300) %>% summarise(EVI_8001300 = mean(EVI), NDVI_8001300 = mean(NDVI), EVI2_8001300 = mean(EVI2), WDRVI_8001300=mean(WDRVI), NDMI_8001300=mean(NDMI), GCI_8001300=mean(GCI), NIRv_8001300= mean(NIRv))
+#GDD: 400-1300
+a6 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(GDD_AT > 400 & GDD_AT < 1300) %>% summarise(EVI_4001300 = mean(EVI), NDVI_4001300 = mean(NDVI), EVI2_4001300 = mean(EVI2), WDRVI_4001300=mean(WDRVI), NDMI_4001300=mean(NDMI), GCI_4001300=mean(GCI), NIRv_4001300= mean(NIRv))
+
+dim(a1) #167
+dim(a6)
+
+features_VIs_Period_rr <- merge(cbind(a1, a2[,2:8], a3[,2:8],a4[,2:8],a5[,2:8], a6[,2:8]), yield_rr_9419, by = "Year_Field")
+dim(features_VIs_Period_rr) #167,48
+head(features_VIs_Period_rr)
+
+cor_vis6 <- cor(features_VIs_Period_rr$Yield, features_VIs_Period_rr[,c(2:43)])
+View(t(cor_vis6))
+```
+
+##Period average weather
+```{r}
+#GDD: 0-400
+a1 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(GDD_AT < 400) %>% summarise(MaxTemp_400 = mean(MaxTemp), MinTemp_400 = mean(MinTemp), RH_400 = mean(RH), ETo_400=mean(ETo), Precip_400=mean(Precip), srad_400=mean(srad), vs_400= mean(vs), VPD_400 = mean(VPD))
+#GDD: 0-800
+a2 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(GDD_AT < 800) %>% summarise(MaxTemp_800 = mean(MaxTemp), MinTemp_800 = mean(MinTemp), RH_800 = mean(RH), ETo_800=mean(ETo), Precip_800=mean(Precip), srad_800=mean(srad), vs_800= mean(vs), VPD_800 = mean(VPD))
+#GDD: 0-1300
+a3 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(GDD_AT < 1300) %>% summarise(MaxTemp_1300 = mean(MaxTemp), MinTemp_1300 = mean(MinTemp), RH_1300 = mean(RH), ETo_1300=mean(ETo), Precip_1300=mean(Precip), srad_1300=mean(srad), vs_1300= mean(vs), VPD_1300 = mean(VPD))
+#GDD: 400-800
+a4 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(GDD_AT > 400 & GDD_AT < 800) %>% summarise(MaxTemp_400800 = mean(MaxTemp), MinTemp_400800 = mean(MinTemp), RH_400800 = mean(RH), ETo_400800=mean(ETo), Precip_400800=mean(Precip), srad_400800=mean(srad), vs_400800= mean(vs), VPD_400800 = mean(VPD))
+#GDD: 800-1300
+a5 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(GDD_AT > 800 & GDD_AT < 1300) %>% summarise(MaxTemp_8001300 = mean(MaxTemp), MinTemp_8001300 = mean(MinTemp), RH_8001300 = mean(RH), ETo_8001300=mean(ETo), Precip_8001300=mean(Precip), srad_8001300=mean(srad), vs_8001300= mean(vs), VPD_8001300 = mean(VPD))
+#GDD: 400-1300
+a6 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(GDD_AT > 400 & GDD_AT < 1300) %>% summarise(MaxTemp_4001300 = mean(MaxTemp), MinTemp_4001300 = mean(MinTemp), RH_4001300 = mean(RH), ETo_4001300=mean(ETo), Precip_4001300=mean(Precip), srad_4001300=mean(srad), vs_4001300= mean(vs), VPD_4001300 = mean(VPD))
+
+features_weather_Period_rr <- merge(cbind(a1, a2[,2:9], a3[,2:9],a4[,2:9],a5[,2:9], a6[,2:9]), yield_rr_9419, by = "Year_Field")
+
+dim(features_weather_Period_rr) #167,54
+```
+
+##Peak VIs
+```{r}
+field_peak_rr_yield <- base::merge(field_peak_rr, yield_rr_9419, by = c("Year","FieldID"), all.x = TRUE, all.y = FALSE)
+
+head(field_peak_rr_yield)
+dim(field_peak_rr_yield) #167,21
+field_peak_rr_yield$ID <- NULL
+```
+
+##Monthly average VIs
+```{r}
+aggregate(df_field_rr_yield_weather, Month %>% c(4:10))[]
+```
+
+#Model Building 
+##Period_VI + Peak_VI + Weather_VI
+###Preprocessing 
+```{r}
+features_VIsweather_Period_rr <- base::merge(features_VIs_Period_rr, features_weather_Period_rr, by = c("Year_Field","Year","FieldID","Yield","plant_date","harv_date"))
+
+features_VIsweather_Period_Peak_rr <- base::merge(features_VIsweather_Period_rr, field_peak_rr_yield, by = c("Year_Field","Year","FieldID","Yield","plant_date","harv_date"))
+dim(features_VIsweather_Period_Peak_rr) #167,110
+dim(features_VIsweather_Period_rr)  #167,96
+
+
+cor_cut_periodvisweather_rr <- findCorrelation(cor(features_VIsweather_Period_Peak_rr[,c(7:110)]), cutoff = 0.7, verbose = TRUE, names = TRUE)
+features_VIsweather_Period_Peak_rr_corcut <- cbind(features_VIsweather_Period_Peak_rr[,c(1:6)], features_VIsweather_Period_Peak_rr[,c(7:110)][cor_cut_periodvisweather_rr])
+dim(features_VIsweather_Period_Peak_rr_corcut) #167,96
+
+set.seed(666)
+intrain_rr <- createDataPartition(y = features_VIsweather_Period_Peak_rr_corcut$Yield, p = 0.7, list = FALSE)
+training_rr <- features_VIsweather_Period_Peak_rr_corcut[intrain_rr, ]
+testing_rr <- features_VIsweather_Period_Peak_rr_corcut[-intrain_rr, ]
+traincrtl <- trainControl(method = "cv", number = 10)
+
+```
+###Feature selection 
+```{r}
+#Feature reduction 
+to_test <- seq(1,10,by = 1)
+#recursive feature elimination 
+rfectrl <- rfeControl(functions = rfFuncs, method = "cv", number = 10,verbose = FALSE)
+fs_rfe_periodvisweather_peak_rr <- rfe(x = features_VIsweather_Period_Peak_rr_corcut[,c(7:97)],  y = features_VIsweather_Period_Peak_rr_corcut$Yield, rfeControl = rfectrl, sizes = c(to_test))
+select_rfe10_periodvisweather_peak_rr <- predictors(fs_rfe_periodvisweather_peak_rr)[1:10]
+select_rfeall_periodvisweather_peak_rr <- predictors(fs_rfe_periodvisweather_peak_rr)
+
+```
+###Model Building 
+```{r}
+set.seed(777)
+traincrtl <- trainControl(method = "cv", number = 10)
+
+#RF
+##Top 10
+rffit_periodvisweather_peak_rr <- train(Yield~., data = features_VIsweather_Period_Peak_rr_corcut[,c("Yield",select_rfe10_periodvisweather_peak_rr)], method = "rf", trControl = traincrtl, tuneLength = 10, verbose = FALSE)
+rffit_periodvisweather_peak_rr
+#cor(stats::predict(rffit_periodvisweather_peak_rr, testing_rr), testing_rr$Yield)^2  
+#RMSE(stats::predict(rffit_periodvisweather_peak_rr, testing_rr), testing_rr$Yield) 
+#RPIQ(stats::predict(rffit_periodvisweather_peak_rr, testing_rr), testing_rr$Yield) 
+##Full model
+rffit_periodvisweather_peak_full_rr <- train(Yield~., data = features_VIsweather_Period_Peak_rr_corcut[,c("Yield",select_rfeall_periodvisweather_peak_rr)], method = "rf", trControl = traincrtl, tuneLength = 10, verbose = FALSE)
+rffit_periodvisweather_peak_full_rr
+cor(stats::predict(rffit_periodvisweather_peak_all_rr, testing_rr), testing_rr$Yield)^2  
+RMSE(stats::predict(rffit_periodvisweather_peak_all_rr, testing_rr), testing_rr$Yield) 
+RPIQ(stats::predict(rffit_periodvisweather_peak_all_rr, testing_rr), testing_rr$Yield) 
+
+
+#SVR
+svrfit_periodvisweather_peak_rr <- train(Yield~., data = features_VIsweather_Period_Peak_rr_corcut[,c("Yield", select_rfe10_periodvisweather_peak_rr)], method = "svmRadial", trControl = traincrtl, tuneLength = 10, verbose = FALSE)
+svrfit_periodvisweather_peak_rr
+
+svrfit_periodvisweather_peak_full_rr <- train(Yield~., data = features_VIsweather_Period_Peak_rr_corcut[,c("Yield", select_rfeall_periodvisweather_peak_rr)], method = "svmRadial", trControl = traincrtl, tuneLength = 10, verbose = FALSE)
+svrfit_periodvisweather_peak_full_rr
+
+#cor(stats::predict(svrfit_periodvisweather_peak_rr, testing_rr), testing_rr$Yield)^2  
+#RMSE(stats::predict(svrfit_periodvisweather_peak_rr, testing_rr), testing_rr$Yield) 
+#RPIQ(stats::predict(svrfit_periodvisweather_peak_rr, testing_rr), testing_rr$Yield) 
+
+#KNN
+knnfit_periodvisweather_peak_rr <- train(Yield~., data = features_VIsweather_Period_Peak_rr_corcut[,c("Yield", select_rfe10_periodvisweather_peak_rr)], method = "knn", trControl = traincrtl, tuneLength = 10, verbose = FALSE)
+knnfit_periodvisweather_peak_rr
+
+knnfit_periodvisweather_peak_full_rr <- train(Yield~., data = features_VIsweather_Period_Peak_rr_corcut[,c("Yield", select_rfeall_periodvisweather_peak_rr)], method = "knn", trControl = traincrtl, tuneLength = 10, verbose = FALSE)
+knnfit_periodvisweather_peak_full_rr
+
+#cor(stats::predict(knnfit_periodvisweather_peak_rr, testing_rr), testing_rr$Yield)^2  
+#RMSE(stats::predict(knnfit_periodvisweather_peak_rr, testing_rr), testing_rr$Yield) 
+#RPIQ(stats::predict(knnfit_periodvisweather_peak_rr, testing_rr), testing_rr$Yield) 
+
+
+#GBM
+gbmfit_periodvisweather_peak_rr <- train(Yield~., data = features_VIsweather_Period_Peak_rr_corcut[,c("Yield", select_rfe10_periodvisweather_peak_rr)], method = "gbm", trControl = traincrtl, tuneLength = 10, verbose = FALSE)
+gbmfit_periodvisweather_peak_rr
+
+par(mfrow = c(1,1))
+plot(predict(rffit_periodvisweather_peak_rr), features_VIsweather_Period_Peak_rr_corcut$Yield)
+cor(predict(rffit_periodvisweather_peak_rr), features_VIsweather_Period_Peak_rr_corcut$Yield)
 ```
 
 
-##Calculate county-level average daily VIs
+##Period VIs
+###Preprocessing 
 ```{r}
-head(weather_davis)
+#solve multicollinearity problem
+cor_cut_periodvis_rr <- findCorrelation(cor(features_VIsweather_Period_rr[,c(7:96)]), cutoff= 0.7, verbose = TRUE, names = TRUE)
+features_VIs_Period_rr_corcut <- cbind(features_VIs_Period_rr[,c(1, 44:48)], features_VIs_Period_rr[,c(2:43)][cor_cut_periodvis_rr])
+dim(features_VIs_Period_rr_corcut) #167,46
+dim(features_VIs_Period_rr) #167,48
+
+
+set.seed(777)
+intrain_rr <- createDataPartition(y = features_VIs_Period_rr_corcut$Yield, p = 0.7, list = FALSE)
+training_rr <- features_VIs_Period_rr_corcut[intrain_rr, ]
+testing_rr <- features_VIs_Period_rr_corcut[-intrain_rr, ]
+traincrtl <- trainControl(method = "cv", number = 10)
+
+
+```
+###Feature selection 
+```{r}
+#Feature reduction 
+to_test <- seq(1,10,by = 1)
+#recursive feature elimination 
+rfectrl <- rfeControl(functions = rfFuncs, method = "cv", number = 10,verbose = FALSE)
+fs_rfe_periodvis_rr <- rfe(x = features_VIs_Period_rr_corcut[,c(7:46)], y = features_VIs_Period_rr_corcut$Yield, rfeControl = rfectrl, sizes = c(to_test))
+select_rfe5_periodvis_rr <- predictors(fs_rfe_periodvis_rr)[1:5]
+select_rfe3_periodvis_rr <- predictors(fs_rfe_periodvis_rr)[1:3]
+select_rfe10_periodvis_rr <- predictors(fs_rfe_periodvis_rr)[1:10]
+
+predictors(fs_rfe_periodvis_rr)
+
+```
+##Model Building
+```{r}
+set.seed(777)
+traincrtl <- trainControl(method = "cv", number = 10)
+
+#RF
+rffit_periodvis10_rr <- train(Yield~., data = training_rr[,c("Yield", select_rfe10_periodvis_rr)], method = "rf", trControl = traincrtl, tuneLength = 10, verbose = FALSE)
+rffit_periodvis10_rr
+cor(stats::predict(rffit_periodvis10_rr, testing_rr), testing_rr$Yield)^2  #0.388
+RMSE(stats::predict(rffit_periodvis10_rr, testing_rr), testing_rr$Yield) #7.57
+RPIQ(stats::predict(rffit_periodvis10_rr, testing_rr), testing_rr$Yield) #1.60
+
+rffit_periodvis5_rr <- train(Yield~., data = training_rr[,c("Yield", select_rfe5_periodvis_rr)], method = "rf", trControl = traincrtl, tuneLength = 10, verbose = FALSE)
+rffit_periodvis5_rr
+cor(stats::predict(rffit_periodvis5_rr, testing_rr), testing_rr$Yield)^2  #0.321
+RMSE(stats::predict(rffit_periodvis5_rr, testing_rr), testing_rr$Yield) #7.89
+RPIQ(stats::predict(rffit_periodvis5_rr, testing_rr), testing_rr$Yield) #1.54
+
+rffit_periodvis3_rr <- train(Yield~., data = training_rr[,c("Yield", select_rfe3_periodvis_rr)], method = "rf", trControl = traincrtl, tuneLength = 10, verbose = FALSE)
+rffit_periodvis3_rr
+cor(stats::predict(rffit_periodvis3_rr, testing_rr), testing_rr$Yield)^2  #0.22
+RMSE(stats::predict(rffit_periodvis3_rr, testing_rr), testing_rr$Yield) #8.65
+RPIQ(stats::predict(rffit_periodvis3_rr, testing_rr), testing_rr$Yield) #1.40
+
+#SVR
+
+
+#SVR
+
+#RF
+
+rffit_peakvi_5 <- train(Yield~., data = training[,c("Yield",select_rfe5_peakvis)], method = "rf", trControl = traincrtl, tuneLength = 10, verbose = FALSE)  #r^2 = 0.566
+rffit_peakvi_5 
+cor(stats::predict(rffit_peakvi_5,testing), testing$Yield)^2  #0.513
+RMSE(stats::predict(rffit_peakvi_5,testing), testing$Yield)  #4.56
+RPIQ(stats::predict(rffit_peakvi_5,testing), testing$Yield) #1.97
+
+rffit_peakvi_3 <- train(Yield~., data = training[,c("Yield",select_rfe3_peakvis)], method = "rf", trControl = traincrtl, tuneLength = 10, verbose = FALSE)  #r^2 = 0.578
+rffit_peakvi_3 
+cor(stats::predict(rffit_peakvi_3,testing), testing$Yield)^2  #0.577
+RMSE(stats::predict(rffit_peakvi_3,testing), testing$Yield)  #4.24
+RPIQ(stats::predict(rffit_peakvi_3,testing), testing$Yield) #2.12
+
+#svm
+svmfit_peakvi_all <- train(Yield~., data = training[,c("Yield",select_rfeall_peakvis)], method = "svmRadial", trControl = traincrtl, tuneLength = 10, verbose = FALSE)  #r^2 = 0.617
+svmfit_peakvi_all 
+cor(stats::predict(svmfit_peakvi_all,testing), testing$Yield)^2  #0.428
+RMSE(stats::predict(svmfit_peakvi_all,testing), testing$Yield)  #4.97
+RPIQ(stats::predict(svmfit_peakvi_all,testing), testing$Yield) #1.81
+svmfit_peakvi_5 <- train(Yield~., data = training[,c("Yield",select_rfe5_peakvis)], method = "svmRadial", trControl = traincrtl, tuneLength = 10, verbose = FALSE)  #r^2 = 0.566
+svmfit_peakvi_5 
+cor(stats::predict(svmfit_peakvi_5,testing), testing$Yield)^2  #0.418
+RMSE(stats::predict(svmfit_peakvi_5,testing), testing$Yield)  #4.99
+RPIQ(stats::predict(svmfit_peakvi_5,testing), testing$Yield) #1.80
+svmfit_peakvi_3 <- train(Yield~., data = training[,c("Yield",select_rfe3_peakvis)], method = "svmRadial", trControl = traincrtl, tuneLength = 10, verbose = FALSE)  #r^2 = 0.578
+svmfit_peakvi_3 
+cor(stats::predict(svmfit_peakvi_3,testing), testing$Yield)^2  #0.526
+RMSE(stats::predict(svmfit_peakvi_3,testing), testing$Yield)  #4.48
+RPIQ(stats::predict(svmfit_peakvi_3,testing), testing$Yield) #2.00
+
+#linear regression
+lmfit_peakvi_5 <- train(Yield~., data = training[,c("Yield",select_rfe5_peakvis)], method = "lm", trControl = traincrtl, tuneLength = 10, verbose = FALSE)  #r^2 = 0.566
+lmfit_peakvi_5 
+cor(stats::predict(lmfit_peakvi_5,testing), testing$Yield)^2  #0.559
+RMSE(stats::predict(lmfit_peakvi_5,testing), testing$Yield)  #4.36
+RPIQ(stats::predict(lmfit_peakvi_5,testing), testing$Yield) #2.06
+lmfit_peakvi_3 <- train(Yield~., data = training[,c("Yield",select_rfe3_peakvis)], method = "lm", trControl = traincrtl, tuneLength = 10, verbose = FALSE)  #r^2 = 0.578
+lmfit_peakvi_3 
+cor(stats::predict(lmfit_peakvi_3,testing), testing$Yield)^2  #0.527
+RMSE(stats::predict(lmfit_peakvi_3,testing), testing$Yield)  #4.59
+RPIQ(stats::predict(lmfit_peakvi_3,testing), testing$Yield) #1.96
+
+#plsr
+plsrfit_peakvi_all <- train(Yield~., data = training[,c("Yield",select_rfeall_peakvis)], method = "pls", trControl = traincrtl, tuneLength = 10, verbose = FALSE)  #r^2 = 0.617
+plsrfit_peakvi_all 
+cor(stats::predict(plsrfit_peakvi_all,testing), testing$Yield)^2  #0.518
+RMSE(stats::predict(plsrfit_peakvi_all,testing), testing$Yield)  #4.61
+RPIQ(stats::predict(plsrfit_peakvi_all,testing), testing$Yield) #1.95
+plsrfit_peakvi_5 <- train(Yield~., data = training[,c("Yield",select_rfe5_peakvis)], method = "pls", trControl = traincrtl, tuneLength = 10, verbose = FALSE)  #r^2 = 0.566
+plsrfit_peakvi_5 
+cor(stats::predict(plsrfit_peakvi_5,testing), testing$Yield)^2  #0.513
+RMSE(stats::predict(plsrfit_peakvi_5,testing), testing$Yield)  #4.63
+RPIQ(stats::predict(plsrfit_peakvi_5,testing), testing$Yield) #1.94
+plsrfit_peakvi_3 <- train(Yield~., data = training[,c("Yield",select_rfe3_peakvis)], method = "pls", trControl = traincrtl, tuneLength = 10, verbose = FALSE)  #r^2 = 0.578
+plsrfit_peakvi_3 
+cor(stats::predict(plsrfit_peakvi_3,testing), testing$Yield)^2  #0.499
+RMSE(stats::predict(plsrfit_peakvi_3,testing), testing$Yield)  #4.75
+RPIQ(stats::predict(plsrfit_peakvi_3,testing), testing$Yield) #1.89
+
+#gbm
+gbmfit_peakvi_all <- train(Yield~., data = training[,c("Yield",select_rfeall_peakvis)], method = "gbm", trControl = traincrtl, tuneLength = 10, verbose = FALSE)  #r^2 = 0.617
+gbmfit_peakvi_all 
+cor(stats::predict(gbmfit_peakvi_all,testing), testing$Yield)^2  #0.482
+RMSE(stats::predict(gbmfit_peakvi_all,testing), testing$Yield)  #4.78
+RPIQ(stats::predict(gbmfit_peakvi_all,testing), testing$Yield) #1.88
+gbmfit_peakvi_5 <- train(Yield~., data = training[,c("Yield",select_rfe5_peakvis)], method = "gbm", trControl = traincrtl, tuneLength = 10, verbose = FALSE)  #r^2 = 0.566
+gbmfit_peakvi_5 
+cor(stats::predict(gbmfit_peakvi_5,testing), testing$Yield)^2  #0.511
+RMSE(stats::predict(gbmfit_peakvi_5,testing), testing$Yield)  #4.56
+RPIQ(stats::predict(gbmfit_peakvi_5,testing), testing$Yield) #1.97
+gbmfit_peakvi_3 <- train(Yield~., data = training[,c("Yield",select_rfe3_peakvis)], method = "gbm", trControl = traincrtl, tuneLength = 10, verbose = FALSE)  #r^2 = 0.578
+gbmfit_peakvi_3 
+cor(stats::predict(gbmfit_peakvi_3,testing), testing$Yield)^2  #0.532
+RMSE(stats::predict(gbmfit_peakvi_3,testing), testing$Yield)  #4.50
+RPIQ(stats::predict(gbmfit_peakvi_3,testing), testing$Yield) #2.00
+
+
 ```
 
 ```{r}
-length(ls_field_filt2_smooth_filt) #49456
-dim(field_peak_filt)  #49576
-head(ls_field_filt2_smooth_filt[[1]])
 
-df_field_smooth <- do.call(rbind, ls_field_filt2_smooth_filt)
+```
 
+```{r}
+head(df_field_rr_yield_weather)
 
-#calculate the weighted ratio 
-df_temp <- field_peak_filt %>% group_by(Area_acre, Year) %>% summarise("Area_acre"= unique(Area_acre), "County" = unique(County))
-head(df_temp)
-df_temp$Area_acre <- as.numeric(df_temp$Area_acre)
-df_temp <- aggregate(df_temp[,"Area_acre"], by = list("County" = df_temp$County, "Year" = df_temp$Year), FUN = sum)
-df_temp$Area_acre <- df_temp$Area_acre/4046.8564224
-#add yield data to dataframe
-df_temp <- merge(df_temp, yield_county, by = c("County","Year"))
-names(df_temp)[c(3,6)] <- c("Area_NASS", "Area_Report")
-ggplot(df_temp, aes(x = Area_NASS, y = Area_Report)) + geom_point()
-county_peak_monthweighted <- merge(df_temp, field_peak_filt, by = c("Year", "County"))
-head(county_peak_monthweighted)
-dim(county_peak_monthweighted) #45881,25
-county_peak_monthweighted$Area_acre<- as.numeric(county_peak_monthweighted$Area_acre)
-#calculate area ratio 
-county_peak_monthweighted$Area_ratio <- county_peak_monthweighted$Area_acre/4046.8564224/county_peak_monthweighted$Area_NASS
-county_peak_monthweighted <- county_peak_monthweighted %>% group_by(County, Year) %>% summarise("peakT_EVI" = weighted.mean(peakT_EVI, Area_ratio),"peakV_EVI" = weighted.mean(peakV_EVI, Area_ratio), "peakT_NDVI" = weighted.mean(peakT_NDVI), "peakV_NDVI" = weighted.mean(peakV_NDVI), "peakT_EVI2" = weighted.mean(peakT_EVI2), "peakV_EVI2" = weighted.mean(peakV_EVI2), "peakT_WDRVI" = weighted.mean(peakT_WDRVI), "peakV_WDRVI" = weighted.mean(peakV_WDRVI), "peakT_NDMI" = weighted.mean(peakT_NDMI), "peakV_NDMI" = weighted.mean(peakV_NDMI), "peakT_NIRv" = weighted.mean(peakT_NIRv), "peakV_NIRv" = weighted.mean(peakV_NIRv))
-head(county_peak_monthweighted)
-#combine with yield 
-county_peak_monthweighted_yield <- merge(county_peak_monthweighted, yield_county, by = c("Year","County"))
-dim(county_peak_monthweighted) #162, 14
-dim(county_peak_monthweighted_yield) #140, 22
+df_field_rr_yield_weather$NIRvr <- df_field_rr_yield_weather$NIRv * df_field_rr_yield_weather$srad
+
+temp5 <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% arrange(DOY) %>% summarise(NIRvr_cum = cumsum(NIRvr), Year = Year, DOY = DOY)
+temp5 <- base::merge(df_field_rr_yield_weather, temp5, by = c("Year_Field","Year","DOY"))
+a <- temp5 %>% group_by(DAT) %>% summarise(NIRvrcum_cor = cor(NIRvr_cum, Yield))
+
+temp6 <- df_field_rr_yield_weather 
+
+head(a)
+ggplot(a, aes(x = DAT, y = NIRvrcum_cor)) + geom_point()
+ggplot(cor_viscum_all, aes(x = DAT, y = NIRvcum_cor)) + geom_point()
+
+temp <- df_field_rr_yield_weather %>% group_by(Year_Field) %>% dplyr::filter(DOY >= plant_DOY & DOY <= harv_DOY) %>% arrange(DOY) %>% summarise(EVI_cum = cumsum(EVI),NDVI_cum = cumsum(NDVI),EVI2_cum = cumsum(EVI2),WDRVI_cum = cumsum(WDRVI),NDMI_cum = cumsum(NDMI), GCI_cum = cumsum(GCI),NIRv_cum = cumsum(NIRv), srad_sum = cumsum(srad), Year = Year, DOY = DOY)
+
+cor_viscum_all <- df_field_rr_yield_weather %>% group_by(DAT) %>% summarise(EVIcum_cor = cor(EVI_cum, Yield), NDVIcum_cor = cor(NDVI_cum, Yield), EVI2cum_cor = cor(EVI2_cum, Yield), WDRVIcum_cor = cor(WDRVI_cum, Yield), NDMIcum_cor = cor(NDMI_cum, Yield),GCIcum_cor = cor(GCI_cum, Yield), NIRvcum_cor = cor(NIRv_cum, Yield))
 
 ```
 
